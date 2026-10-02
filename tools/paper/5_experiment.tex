@@ -1,0 +1,242 @@
+\section{Experiments}
+\label{sec:exp}
+
+\subsection{Benchmark Models}
+
+To comprehensively evaluate existing models on \textsc{ProcObject-10K}, we benchmark 13 models with diverse architectures, parameter sizes, and input modalities.
+
+\textbf{Blind LLMs:} To explore whether commonsense reasoning can solve our benchmark task, we benchmark several language-only models, including GPT-5.4-Mini \cite{openai2026gpt54mini}, Claude-Sonnet-4.6 \cite{anthropic2026claudesonnet46}, Qwen3-30B-A3B \cite{yang2025qwen3}, and Llama-3.2-3B \cite{dubey2024llama}. These models only receive textual prompts and questions without video input, forcing them to rely on internal priors to address procedural questions.
+
+\textbf{MLLMs:} We benchmark representative commercial and open-source multimodal models that takes both video and text as input. Commercial models include Gemini-3.1-Flash-Lite \cite{google2026gemini31flashlite}, GPT-5.4-Mini \cite{openai2026gpt54mini}, and Claude-Sonnet-4.6 \cite{anthropic2026claudesonnet46}. Open-source baselines include variants of the InternVL3.5 family (4B, 8B, and 38B) \cite{wang2025internvl3_5} and the Qwen3-VL family (4B, 8B, and 30B-A3B) \cite{bai2025qwen3vl}.
+
+\textbf{Fine-tuned Model:} We also benchmark the Qwen3-VL-4B model \cite{bai2025qwen3vl} fine-tuned using object-centric SFT on \textsc{ProcObject-10K} training data to demonstrate its effectiveness.
+
+\subsection{Evaluation Metrics}
+\label{sec:eval_metrics}
+
+Our benchmark includes a comprehensive evaluation that jointly measures open-ended question answering and temporal grounding accuracy, enabling rigorous assessment of model performance.
+
+\textbf{Answering Metrics.} We evaluate the generated responses using a bi-level quantitative approach. At the textual-embedding level, we use \textit{Sentence Similarity (S.)} \cite{reimers2019sentence} and \textit{BERT-Score F1 (B.)} \cite{zhang2019bertscore} to provide reproducible measurements. At the natural-language level, we employ the LLM-as-Judge paradigm to assess linguistic coherence. Following previous works \cite{liu2025surveillancevqa, maaz2024videogpt+}, we utilize GPT-5-mini \cite{openai_gpt5_2025}, Qwen3 (2B) \cite{yang2025qwen3} and Llama-3.2 (3B) \cite{dubey2024llama} to evaluate answers independently from four dimensions using a 0–5 scoring scale: Contextual Integration for factual consistency, Detail Orientation for fine-grained completeness, Contextual Understanding for narrative and causal flow, and Temporal Understanding for event ordering and state transitions. The final \textit{LLM-as-judge score (J.)} is the average across all four dimensions and all LLM-as-judge models.
+
+\textbf{Grounding Metrics.} To evaluate the ability to localize visual evidence, we measure the alignment between the predicted and ground-truth evidence of temporal segments. Since each QA pair in \textsc{ProcObject-10K} may be supported by multiple non-overlapping intervals, we follow previous work \cite{chen2025grounded} and adopt a set-level Intersection-over-Union (IoU) metric. For each sample with $m$ predicted spans $\hat{\mathcal{T}} = \{\hat{T}_i\}_{i=1}^{m}$ and $n$ ground-truth spans $\mathcal{T} = \{T_j\}_{j=1}^{n}$:
+\begin{equation}
+    \text{IoU}(\mathcal{T}, \hat{\mathcal{T}}) = \frac{\sum_{i=1}^{m}\sum_{j=1}^{n} |\hat{T}_i \cap T_j|}{\left| \bigcup_{i=1}^{m} \hat{T}_i \cup \bigcup_{j=1}^{n} T_j \right|}.
+\end{equation}
+In the following experiments, we report the mean \textit{IoU} across all samples. We additionally report mean \textit{IoP} and mean \textit{IoG} \cite{chen2025grounded}, which replace the denominator with $\left|\bigcup_{i=1}^{m} \hat{T}_i\right|$ and $\left|\bigcup_{j=1}^{n} T_j\right|$ respectively, serving as precision- and recall-style counterparts.
+
+\input{tables/procobject-10}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.98\linewidth]{figures/radar_chart.pdf}
+    \caption{Performance comparison of MLLMs across five QA types on \textsc{ProcObject-10K}.}
+    \vspace{-6pt}
+    \label{fig:rader}
+\end{figure}
+
+\subsection{Quantitative Results and Analysis}
+\label{sec:results}
+
+Table \ref{tab:main_results} and Figure \ref{fig:rader} demonstrate the experimental results on \textsc{\textsc{ProcObject-10K}}. We have the following findings: \textbf{1) Overall grounding performance remains constrained:} Across all benchmark models, temporal grounding precision is notably low, with mIoU scores consistently falling below 45\%. \textbf{2) A sharp answering-grounding gap reveals reliance on priors:} There is a significant discrepancy between answering plausibility and grounding precision, suggesting that models often rely on internal linguistic and commonsense priors rather than actual visual evidence. \textbf{3) Blind LLMs show competitive linguistic performance:} The reliance on commonsense reasoning is further validated by language-only models, such as GPT-5.4-Mini (Blind), which achieves an Answering Judge score of 3.14 despite having no video input, only marginally lower than its MLLM counterpart's 3.42. \textbf{4) Parameter scaling yields limited gains:} Increasing model size does not inherently solve object-centric understanding, as observed by the marginal improvements when scaling from 4B to greater than 30B variants of Qwen3-VL and InternVL3.5 families. \textbf{5) ``Needle-in-a-Haystack'' reasoning is more challenging.} Pinpointing very short-term but critical object-state appearance or transitions within long sequences is harder than \textit{Multi-hop Reasoning}, reflecting the difficulty of identifying sparse dynamics within complex human-object interactions. \textbf{6) Object-centric SFT demonstrates superior effectiveness:} Our fine-tuned Qwen3-VL-4B model achieves the highest performance across most metrics, with its 4B-parameter architecture surpassing much larger open-source and proprietary baselines, illustrating the effectiveness of our finetuning paradigm. Detailed analysis of performance improvement will be conducted through ablation study in Section \ref{sec:ablation}. 
+
+\subsection{Ablation Study}
+\label{sec:ablation}
+
+\begin{wraptable}{r}{0.32\textwidth}
+\vspace{-31pt}
+\centering
+\small
+\setlength{\tabcolsep}{4pt} % 略微缩小间距以适应较窄的布局
+\caption{Ablation study results.}
+\label{tab:ablation}
+\begin{tabular}{ccccc}
+\toprule
+$\mathcal{L}_{\text{gen}}$ & $\mathcal{L}_{\text{spl}}$ & $\mathcal{L}_{\text{tmp}}$ & J. & IoU \\
+\midrule
+\checkmark &            &            & 3.18 & 42.4 \\
+\checkmark & \checkmark &            & 3.21 & 42.5 \\
+\checkmark &            & \checkmark & 3.26 & 43.4 \\
+\checkmark & \checkmark & \checkmark & \textbf{3.51} & \textbf{44.5} \\
+\bottomrule
+\end{tabular}
+\end{wraptable}
+
+We conduct ablation study on \textsc{ProcObject-10K} to evaluate the effectiveness of each training objective. Table \ref{tab:ablation} shows that all losses contribute positively to performance, with the temporal constraint providing more substantial gains. The full loss achieves the best results, validating the effectiveness of combining spatial and temporal supervision to model the dynamic evolution of objects.
+
+
+\subsection{Generalization Analysis}
+To evaluate the generalization of procedural priors learned from \textsc{ProcObject-10K}, we test the fine-tuned models on (1) zero-shot grounded VideoQA task using MultiHop-EgoQA benchmark \cite{chen2025grounded} , and (2) zero-shot embodied planning task using ALFRED benchmark \cite{ALFRED20}. Qwen3-VL-4B$^\ddagger$ denotes the model variant fine-tuned only with generative loss $\mathcal{L}_{\mathrm{gen}}$ without spatial-temporal constraints.
+
+\textbf{Grounded VideoQA.}
+The MultiHop-EgoQA dataset \cite{chen2025grounded} also focuses on instructional videos, but contains general procedural questions rather than object-centric reasoning tasks. We follow their LLM-as-Judge protocol to ensure fair comparison, where scores range from 0 to 10 (higher is better). As shown in Table \ref{tab:multihop_egoqa}, even when trained using only the standard generative objective, Qwen3-VL-4B$^\ddagger$ outperforms the zero-shot baseline and achieves performance competitive with GeLM-7B, which is specifically fine-tuned on the MultiHop-EgoQA training set. This result suggests that \textsc{ProcObject-10K} enables models to learn transferable object-centric procedural representations that generalize effectively to related tasks. Furthermore, the model trained with our full object-centric SFT framework (Qwen3-VL-4B) achieves additional gains, obtaining the best performance across both grounding and answering metrics. These results further demonstrate the effectiveness and generalization capability of our proposed fine-tuning paradigm for complex spatial-temporal procedural understanding.
+
+\begin{wrapfigure}[17]{r}{0.35\textwidth} 
+  \centering
+  \vspace{-14pt}
+  \includegraphics[width=0.35\textwidth]{figures/planning_figure.pdf}
+  \caption{Visualization of embodied planning on ALFRED.}
+  \label{fig:planning}
+\end{wrapfigure}
+
+\textbf{Embodied Planning.}
+ALFRED \cite{ALFRED20} is a benchmark for embodied agents to perform long horizon household tasks from language instructions. Its test set comprises seen scenarios included in the training data, and the unseen scenarios for evaluation. We evaluate transfer performance by integrating models fine-tuned on \textsc{ProcObject-10K} into the FLARE framework \cite{kim2025multimodal}, a prior method specifically designed for this task, as the zero-shot planner. Table \ref{tab:flare_qwen_results} shows that the fine-tuned Qwen3-VL-4B models achieve improvements over the zero-shot baseline. Even when trained only with the standard generative objective, Flare+Qwen3-VL-4B$^\ddagger$ outperforms several zero-shot MLLM planners. Furthermore, the object-centric fine-tuned model Flare+Qwen3-VL-4B achieves the best overall performance. These results demonstrate the generalization of the object-centric representations learned from \textsc{ProcObject-10K}, suggesting its potential to benefit embodied reasoning tasks beyond procedural understanding in instructional videos.
+
+\begin{table*}[t]
+\centering
+
+% 左侧表格（占56%宽度）
+\begin{minipage}[t]{0.59\textwidth}
+\centering
+\vspace{-5pt}
+\caption{
+Evaluation results on \textsc{MultiHop-EgoQA} benchmark. The \colorbox{bestgreen}{Best} and \colorbox{secondred}{Second-best} results are highlighted.}
+\label{tab:multihop_egoqa}
+% 使用 resizebox 强制等比例缩放整个表格直到填满 \linewidth
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{} p{3.6cm}ccccccc } % 这里稍微放宽了第一列，因为整体会被缩小
+\toprule
+\multirow{2}{*}{\textbf{Methods}}
+& \multirow{2}{*}{\textbf{Input}}
+& \multicolumn{4}{c}{\textbf{Temporal Grounding}}
+& \multicolumn{2}{c}{\textbf{Question Answering}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-8}
+& 
+& \textbf{mIoP} & \textbf{mIoG} & \textbf{IoU@0.3} & \textbf{mIoU}
+& \textbf{Sent. Sim.} & \textbf{LLM Score} \\
+\midrule
+Human
+& --
+& 71.8 & 81.0 & 87.0 & 61.8
+& 74.3 & 7.5 \\
+
+\noalign{\vspace{1pt}}
+\cdashline{1-8}[0.4pt/2pt]
+\noalign{\vspace{1pt}}
+
+\multicolumn{8}{@{}l}{\textit{\textcolor{groupgray}{Zero-shot Inference}}} \\
+GPT-4o
+& 60 f
+& 18.9 & 24.4 & 12.0 & 12.2
+& 73.7 & \cellcolor{bestgreen}5.4 \\
+
+InternVL2-8B
+& 30 f
+& 11.8 & 24.0 & 6.3 & 6.6
+& 71.9 & 4.5 \\
+
+LLaVA-NeXT-Video-7B
+& 32 f
+& -- & -- & -- & --
+& 62.1 & 4.2 \\
+
+TimeChat-7B
+& 96 f
+& 10.2 & 5.6 & 3.0 & 3.6
+& 58.9 & 3.3 \\
+
+VTimeLLM-7B
+& 100 f
+& 12.4 & 28.2 & 8.8 & 9.2
+& 70.5 & 4.3 \\
+
+Qwen3-VL-4B
+& 60 f
+& 19.0 & \cellcolor{secondred}38.1 & 15.5 & 13.1
+& 50.0 & 3.2 \\
+
+\noalign{\vspace{1pt}}
+\cdashline{1-8}[0.4pt/2pt]
+\noalign{\vspace{1pt}}
+
+\multicolumn{8}{@{}l}{\textit{\textcolor{groupgray}{Fine-tuned on \textsc{MultiHop-EgoQA}}}} \\
+GeLM-7B
+& 180 f
+& 23.7 & \cellcolor{bestgreen}41.0 & 18.2 & 16.7
+& \cellcolor{bestgreen}75.0 & 4.8 \\
+
+\noalign{\vspace{1pt}}
+\cdashline{1-8}[0.4pt/2pt]
+\noalign{\vspace{1pt}}
+
+\multicolumn{8}{@{}l}{\textit{\textcolor{groupgray}{Fine-tuned on \textsc{\textsc{ProcObject-10K}}}}} \\
+Qwen3-VL-4B$^\ddagger$
+& 60 f
+& \cellcolor{secondred}31.4 & 32.1 & \cellcolor{secondred}25.2 & \cellcolor{secondred}19.8
+& 73.6 & \cellcolor{secondred}5.3 \\
+
+Qwen3-VL-4B
+& 60 f
+& \cellcolor{bestgreen}34.8 & 37.3 & \cellcolor{bestgreen}30.8 & \cellcolor{bestgreen}22.6
+& \cellcolor{secondred}74.6 & \cellcolor{bestgreen}5.4 \\
+
+\bottomrule
+\end{tabular}%
+}
+\end{minipage}%
+\hfill% 中间弹簧留白（约占3%的宽度）
+% 右侧表格（占41%宽度）
+\begin{minipage}[t]{0.37\textwidth}
+\centering
+\caption{
+Evaluation results on ALFRED benchmark \cite{ALFRED20}. 
+}
+\vspace{-4pt}
+\label{tab:flare_qwen_results}
+% 同样进行强制缩放
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{} lcccc }
+\toprule
+\multirow{2}{*}{\textbf{Methods}}
+& \multicolumn{2}{c}{\textbf{Test Seen}}
+& \multicolumn{2}{c}{\textbf{Test Unseen}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& \textbf{SR} & \textbf{GC}
+& \textbf{SR} & \textbf{GC} \\
+\midrule
+
+\multicolumn{5}{@{}l}{\textit{\textcolor{groupgray}{Zero-shot MLLM}}} \\
+
+GPT-4
+& 37.40 & \cellcolor{secondred}48.30 & 34.90 & 44.90 \\
+
+Qwen3-VL-4B
+& 30.50 & 43.60 & 29.40 & 40.50 \\
+
+\noalign{\vspace{1pt}}
+\cdashline{1-5}[0.4pt/2pt]
+\noalign{\vspace{1pt}}
+
+\multicolumn{5}{@{}l}{\textit{\textcolor{groupgray}{Flare+Zero-shot MLLM Planner}}} \\
+
+FLARE+LLaMA2
+& 16.96 & 24.84 & 17.79 & 27.40 \\
+
+FLARE+Vicuna
+& 20.61  & 29.57  & 22.04  & 33.57 \\
+
+FLARE+GPT-3.5
+& 32.55  & 42.02  & 31.79  & 43.94 \\
+
+FLARE+GPT-4
+& \cellcolor{secondred}40.05  & \cellcolor{bestgreen}48.84 & \cellcolor{secondred}40.88  & \cellcolor{secondred}51.72 \\
+
+FLARE+Qwen3-VL-4B
+& 31.50 & 44.20 & 32.01 & 44.62 \\
+
+\noalign{\vspace{1pt}}
+\cdashline{1-5}[0.4pt/2pt]
+\noalign{\vspace{1pt}}
+
+\multicolumn{5}{@{}l}{\textit{\textcolor{groupgray}{Flare+Fine-tuned MLLM Planner}}} \\
+
+FLARE+Qwen3-VL-4B$^\ddagger$
+& 36.97 & 46.74 & 38.02 & 50.08 \\
+
+FLARE+Qwen3-VL-4B
+& \cellcolor{bestgreen}40.50 & 48.20 & \cellcolor{bestgreen}41.33 & \cellcolor{bestgreen}51.97 \\
+
+\bottomrule
+\end{tabular}%
+}
+\end{minipage}
+\vspace{-10pt}
+\end{table*}

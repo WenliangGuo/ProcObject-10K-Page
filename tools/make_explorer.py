@@ -1,0 +1,124 @@
+"""Build the QA Explorer assets: muted 360p clips, posters, and static/data/explorer.js.
+
+Run from the object_vqa repo root (it reads the test split, the saved benchmark
+predictions, and the raw source videos):
+
+    python /path/to/ProcObject-10K-Page/tools/make_explorer.py /path/to/ProcObject-10K-Page
+
+Predictions are the saved benchmark outputs; evidence is shown exactly as the
+frozen metric scores it (parsed + merged by evaluate_grounding.py).
+"""
+import json
+import os
+import subprocess
+import sys
+
+import cv2
+import numpy as np
+
+sys.path.insert(0, 'benchmark/evaluation')
+from evaluate_grounding import IoU, _merge_intervals, _parse_intervals  # noqa: E402
+
+PAGE = sys.argv[1]
+PRED = 'benchmark/pred_results/'
+MODELS = {
+    'ours': 'qwen3vl_4b_object_ft_v2_predictions.json',
+    'qwen4b': 'Qwen_Qwen3-VL-4B-Instruct_predictions.json',
+    'gpt': 'gpt-5.4-mini_predictions.json',
+    'claude': 'claude-sonnet-4-6_predictions.json',
+}
+BLIND = 'gpt-5.4-mini_blind_predictions.json'
+
+# Two per QA type, all four sources, both temporal-search patterns. Chosen for illustration and
+# deliberately mixed: ours has the best IoU on five, a baseline on four (1031, 8577, 9294, 7112),
+# and every model misses the one-second evidence of 3811.
+EXAMPLES = [
+    (2709, 'Tea'), (1031, 'Stir-fry sauce'),
+    (2323, 'Oatmeal bowl'), (334, 'Egg'),
+    (8577, 'Paper tray'), (2988, 'Laptop screen'),
+    (9902, 'Camera battery'), (9294, 'Tea bag drop'),
+    (7112, 'Camera lens'), (3811, 'Memory chip'),
+]
+POSTER_T = {2988: 20.0, 2709: 44.0}   # default (sharpest in-evidence frame) is a blank screen / an empty room
+VIEW = {'CaptainCook4D': 'Egocentric', 'EgoPER': 'Egocentric',
+        'HoloAssist': 'Egocentric', 'COIN': 'Exocentric'}
+
+
+def flat(d):
+    return [r for k in d for r in d[k]] if isinstance(d, dict) else d
+
+
+def spans(raw):
+    return [[round(s, 2), round(e, 2)] for s, e in _merge_intervals(_parse_intervals(raw))]
+
+
+def src_path(video_path):
+    corpus, rest = video_path.split('/', 1)
+    return f'original_annoations/{corpus}/videos/{rest}'
+
+
+def run(cmd):
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def sharpest_frame(mp4, span, dur):
+    """Poster = least motion-blurred of 9 frames inside the first evidence span."""
+    cap = cv2.VideoCapture(mp4)
+    s, e = span[0], min(span[1], dur - 0.3)
+    best, best_score = None, -1.0
+    for t in np.linspace(s + 0.1 * (e - s), e - 0.1 * (e - s), 9):
+        cap.set(cv2.CAP_PROP_POS_MSEC, float(t) * 1000)
+        ok, frame = cap.read()
+        if not ok:
+            continue
+        score = cv2.Laplacian(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
+        if score > best_score:
+            best, best_score = frame, score
+    return best
+
+
+def main():
+    test = {r['id']: r for r in json.load(open('ProcObject-10K-release/data/testing.json'))}
+    preds = {m: {r['id']: r for r in flat(json.load(open(PRED + f)))} for m, f in MODELS.items()}
+    blind = {r['id']: r for r in flat(json.load(open(PRED + BLIND)))}
+    vdir = os.path.join(PAGE, 'static/videos/explorer')
+    os.makedirs(vdir, exist_ok=True)
+
+    out = []
+    for qid, short in EXAMPLES:
+        r = test[qid]
+        dur = round(r['clip_end'] - r['clip_start'], 2)
+        mp4 = os.path.join(vdir, f'{qid}.mp4')
+        if not os.path.exists(mp4):
+            # Cut the exact benchmark window; 360p, 10 fps, muted, faststart.
+            run(['ffmpeg', '-y', '-ss', str(r['clip_start']), '-i', src_path(r['video_path']),
+                 '-t', str(dur), '-an', '-dn', '-sn', '-map_metadata', '-1', '-vf', 'scale=-2:360,fps=10',
+                 '-c:v', 'libx264', '-preset', 'slow', '-crf', '30', '-pix_fmt', 'yuv420p',
+                 '-movflags', '+faststart', mp4])
+        jpg = os.path.join(vdir, f'{qid}.jpg')
+        if not os.path.exists(jpg):
+            span = [POSTER_T[qid], POSTER_T[qid] + 1.0] if qid in POSTER_T else r['evidence'][0]
+            cv2.imwrite(jpg, sharpest_frame(mp4, span, dur), [cv2.IMWRITE_JPEG_QUALITY, 85])
+
+        models = {}
+        for m in MODELS:
+            p = preds[m][qid]
+            models[m] = dict(answer=p['predicted_answer'].strip(),
+                             evidence=spans(p['predicted_evidence']),
+                             iou=round(IoU(p['predicted_evidence'], r['evidence']), 3))
+        out.append(dict(
+            id=qid, short=short, qa_type=r['qa_type'], reasoning=r['reasoning'],
+            source=r['source'], view=VIEW[r['source']], domain=r['domain'], task=r['task'],
+            duration=dur, question=r['question'], answer=r['answer'],
+            evidence=spans(r['evidence']), models=models,
+            blind=blind[qid]['predicted_answer'].strip(),
+            video=f'static/videos/explorer/{qid}.mp4', poster=f'static/videos/explorer/{qid}.jpg'))
+        print(qid, short, dur, {m: models[m]['iou'] for m in models})
+
+    with open(os.path.join(PAGE, 'static/data/explorer.js'), 'w') as f:
+        f.write('// Generated by tools/make_explorer.py (test split + saved benchmark predictions).\n')
+        f.write('window.PROC_EXPLORER = ' + json.dumps(out, indent=1, ensure_ascii=False) + ';\n')
+
+
+if __name__ == '__main__':
+    main()

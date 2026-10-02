@@ -1,0 +1,393 @@
+% \begin{table*}[t]
+% \centering
+% \scriptsize
+% \setlength{\tabcolsep}{2.8pt}
+% \caption{
+% Evaluation results on full testing set of \textsc{Object10K} across difficulty levels.
+% Grounding is evaluated by mIoU, mIoP, and mIoG.
+% Answering is evaluated by Sentence Similarity (S.), BERT-Score F1 (B.), and LLM-as-Judge score (J.). The \colorbox{bestgreen}{Best} and \colorbox{secondred}{Second-best} results are highlighted.}
+% \label{tab:main_results}
+% \begin{tabular}{p{2.9cm}cccccccccccccccccc}
+% \toprule
+% \multirow{3}{*}{\textbf{Methods}}
+% & \multicolumn{6}{c}{\textbf{Easy}}
+% & \multicolumn{6}{c}{\textbf{Hard}}
+% & \multicolumn{6}{c}{\textbf{All}} \\
+% \cmidrule(lr){2-7} \cmidrule(lr){8-13} \cmidrule(lr){14-19}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}} \\
+% \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+% \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+% \cmidrule(lr){14-16} \cmidrule(lr){17-19}
+% & IoU & IoP & IoG & S. & B. & J.
+% & IoU & IoP & IoG & S. & B. & J.
+% & IoU & IoP & IoG & S. & B. & J. \\
+% \midrule
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Closed Source}}} \\
+% Gemini-3.1-Flash-Lite
+% & 38.7 & 71.3 & 48.2 & 75.4 & 89.7 & 3.3
+% & 31.0 & 46.2 & 50.8 & 68.3 & 88.9 & 2.5
+% & 35.5 & 60.9 & 49.3 & 72.5 & 89.4 & 3.0 \\
+
+% GPT-5.4-Mini
+% & 45.8 & 68.5 & 62.0 & 75.6 & 88.9 & \cellcolor{secondred}3.6
+% & 32.6 & 44.9 & \cellcolor{bestgreen}60.7 & 72.1 & 88.6 & \cellcolor{secondred}3.2
+% & 40.3 & 58.6 & \cellcolor{bestgreen}61.5 & 74.2 & 88.8 & \cellcolor{secondred}3.4 \\
+
+% Claude-Sonnet-4.6
+% & 48.1 & 70.8 & \cellcolor{secondred}62.6 & 70.7 & 85.6 & \cellcolor{bestgreen}3.9
+% & 32.5 & 46.3 & \cellcolor{secondred}55.1 & 65.4 & 85.6 & \cellcolor{bestgreen}3.3
+% & 41.6 & 60.6 & \cellcolor{secondred}59.5 & 68.5 & 85.6 & \cellcolor{bestgreen}3.6 \\
+
+% \cdashline{1-19}[0.4pt/2pt]
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Open Source}}} \\
+% InternVL3.5-4B
+% & 19.8 & 46.4 & 32.9 & 70.8 & 88.9 & 2.3
+% & 12.6 & 29.8 & 32.6 & 65.4 & 88.3 & 1.9
+% & 16.8 & 39.4 & 32.8 & 68.5 & 88.6 & 2.1 \\
+
+% InternVL3.5-8B
+% & 22.4 & 66.5 & 27.6 & 76.6 & 90.2 & 2.9
+% & 16.0 & 49.1 & 21.9 & 69.4 & 89.5 & 2.3
+% & 19.8 & 59.3 & 25.2 & 73.6 & 89.9 & 2.6 \\
+
+% InternVL3.5-38B
+% & 27.2 & \cellcolor{secondred}72.8 & 33.1 & 76.2 & 90.4 & 2.8
+% & 22.8 & 52.8 & 30.8 & 70.4 & 89.9 & 2.4
+% & 25.4 & \cellcolor{secondred}64.5 & 32.2 & 73.8 & 90.2 & 2.7 \\
+
+% Qwen3-VL-4B
+% & 43.3 & 71.4 & 56.5 & 77.5 & 89.5 & 3.1
+% & 31.3 & 50.2 & 50.2 & 70.7 & 88.6 & 2.3
+% & 38.3 & 62.6 & 53.9 & 74.7 & 89.1 & 2.8 \\
+
+% Qwen3-VL-8B
+% & 40.9 & 72.3 & 52.8 & 78.7 & 89.8 & 3.3
+% & 30.3 & 50.7 & 47.1 & 71.5 & 88.6 & 2.5
+% & 36.6 & 63.4 & 50.4 & 75.7 & 89.3 & 3.0 \\
+
+% Qwen3-VL-30B-A3B
+% & 42.4 & 71.2 & 54.6 & 78.9 & 90.0 & 3.3
+% & 32.9 & \cellcolor{secondred}53.7 & 48.5 & 71.1 & 88.9 & 2.7
+% & 38.5 & 63.9 & 52.1 & 75.7 & 89.6 & 3.1 \\
+
+% \cdashline{1-19}[0.4pt/2pt]
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Fine-tuned on \textsc{Object-10K}}}} \\
+% Qwen3-VL-4B (FT)
+% & \cellcolor{secondred}48.2 & 70.1 & 59.5 & \cellcolor{secondred}82.0 & \cellcolor{secondred}92.1 & 3.2
+% & \cellcolor{secondred}33.1 & 52.8 & 43.7 & \cellcolor{bestgreen}78.0 & \cellcolor{bestgreen}91.7 & 3.1
+% & \cellcolor{secondred}41.9 & 62.9 & 52.9 & \cellcolor{secondred}80.3 & \cellcolor{secondred}92.0 & 3.2 \\
+
+% Qwen3-VL-4B (Obj-FT)
+% & \cellcolor{bestgreen}51.4 & \cellcolor{bestgreen}73.1 & \cellcolor{bestgreen}62.9 & \cellcolor{bestgreen}82.4 & \cellcolor{bestgreen}92.2 & 3.5
+% & \cellcolor{bestgreen}33.6 & \cellcolor{bestgreen}54.5 & 44.6 & \cellcolor{bestgreen}78.0 & \cellcolor{secondred}91.6 & 2.9
+% & \cellcolor{bestgreen}44.0 & \cellcolor{bestgreen}65.4 & 55.1 & \cellcolor{bestgreen}80.6 & \cellcolor{bestgreen}92.7 & 3.2 \\
+
+% \bottomrule
+% \end{tabular}
+% \end{table*}
+
+% \begin{table*}[t]
+% \centering
+% \scriptsize
+% \setlength{\tabcolsep}{2.8pt}
+% \caption{
+% Evaluation results on full testing set of \textsc{Object10K} across difficulty levels.
+% Grounding is evaluated by mIoU, mIoP, and mIoG.
+% Answering is evaluated by Sentence Similarity (S.), BERT-Score F1 (B.), and LLM-as-Judge score (J.). The \colorbox{bestgreen}{Best} and \colorbox{secondred}{Second-best} results are highlighted.}
+% \label{tab:main_results}
+% \begin{tabular}{p{2.9cm}cccccccccccccccccc}
+% \toprule
+% \multirow{3}{*}{\textbf{Methods}}
+% & \multicolumn{6}{c}{\textbf{Easy}}
+% & \multicolumn{6}{c}{\textbf{Hard}}
+% & \multicolumn{6}{c}{\textbf{All}} \\
+% \cmidrule(lr){2-7} \cmidrule(lr){8-13} \cmidrule(lr){14-19}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}} \\
+% \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+% \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+% \cmidrule(lr){14-16} \cmidrule(lr){17-19}
+% & IoU & IoP & IoG & S. & B. & J.
+% & IoU & IoP & IoG & S. & B. & J.
+% & IoU & IoP & IoG & S. & B. & J. \\
+% \midrule
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Closed Source}}} \\
+% Gemini-3.1-Flash-Lite
+% & 38.7 & 71.3 & 48.2 & 75.4 & 89.7 & 3.3
+% & 31.0 & 46.2 & 50.8 & 68.3 & 88.9 & 2.5
+% & 35.5 & 60.9 & 49.3 & 72.5 & 89.4 & 3.0 \\
+
+% GPT-5.4-Mini
+% & 45.8 & 68.5 & 62.0 & 75.6 & 88.9 & \cellcolor{secondred}3.6
+% & 32.6 & 44.9 & \cellcolor{bestgreen}60.7 & 72.1 & 88.6 & \cellcolor{secondred}3.2
+% & 40.3 & 58.6 & \cellcolor{bestgreen}61.5 & 74.2 & 88.8 & \cellcolor{secondred}3.4 \\
+
+% Claude-Sonnet-4.6
+% & 48.1 & 70.8 & \cellcolor{secondred}62.6 & 70.7 & 85.6 & \cellcolor{bestgreen}3.9
+% & 32.5 & 46.3 & \cellcolor{secondred}55.1 & 65.4 & 85.6 & \cellcolor{bestgreen}3.3
+% & 41.6 & 60.6 & \cellcolor{secondred}59.5 & 68.5 & 85.6 & \cellcolor{bestgreen}3.6 \\
+
+% \cdashline{1-19}[0.4pt/2pt]
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Open Source}}} \\
+% InternVL3.5-4B
+% & 19.8 & 46.4 & 32.9 & 70.8 & 88.9 & 2.3
+% & 12.6 & 29.8 & 32.6 & 65.4 & 88.3 & 1.9
+% & 16.8 & 39.4 & 32.8 & 68.5 & 88.6 & 2.1 \\
+
+% InternVL3.5-8B
+% & 22.4 & 66.5 & 27.6 & 76.6 & 90.2 & 2.9
+% & 16.0 & 49.1 & 21.9 & 69.4 & 89.5 & 2.3
+% & 19.8 & 59.3 & 25.2 & 73.6 & 89.9 & 2.6 \\
+
+% InternVL3.5-38B
+% & 27.2 & \cellcolor{secondred}72.8 & 33.1 & 76.2 & 90.4 & 2.8
+% & 22.8 & 52.8 & 30.8 & 70.4 & 89.9 & 2.4
+% & 25.4 & \cellcolor{secondred}64.5 & 32.2 & 73.8 & 90.2 & 2.7 \\
+
+% Qwen3-VL-4B
+% & 43.3 & 71.4 & 56.5 & 77.5 & 89.5 & 3.1
+% & 31.3 & 50.2 & 50.2 & 70.7 & 88.6 & 2.3
+% & 38.3 & 62.6 & 53.9 & 74.7 & 89.1 & 2.8 \\
+
+% Qwen3-VL-8B
+% & 40.9 & 72.3 & 52.8 & 78.7 & 89.8 & 3.3
+% & 30.3 & 50.7 & 47.1 & 71.5 & 88.6 & 2.5
+% & 36.6 & 63.4 & 50.4 & 75.7 & 89.3 & 3.0 \\
+
+% Qwen3-VL-30B-A3B
+% & 42.4 & 71.2 & 54.6 & 78.9 & 90.0 & 3.3
+% & 32.9 & \cellcolor{secondred}53.7 & 48.5 & 71.1 & 88.9 & 2.7
+% & 38.5 & 63.9 & 52.1 & 75.7 & 89.6 & 3.1 \\
+
+% \cdashline{1-19}[0.4pt/2pt]
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Fine-tuned}}} \\
+%     Qwen3-VL-4B (Obj-FT)
+% & \cellcolor{bestgreen}51.4 & \cellcolor{bestgreen}73.1 & \cellcolor{bestgreen}62.9 & \cellcolor{bestgreen}82.4 & \cellcolor{bestgreen}92.2 & 3.5
+% & \cellcolor{bestgreen}33.6 & \cellcolor{bestgreen}54.5 & 44.6 & \cellcolor{bestgreen}78.0 & \cellcolor{secondred}91.6 & 2.9
+% & \cellcolor{bestgreen}44.0 & \cellcolor{bestgreen}65.4 & 55.1 & \cellcolor{bestgreen}80.6 & \cellcolor{bestgreen}92.7 & 3.2 \\
+
+% \bottomrule
+% \end{tabular}
+% \end{table*}
+
+% \begin{table*}[t]
+% \centering
+% \scriptsize
+% \setlength{\tabcolsep}{2.5pt}
+% % \renewcommand{\arraystretch}{1.05}
+% \caption{
+% Evaluation results on full testing set of \textsc{Object10K} across difficulty levels.
+% Grounding is evaluated by mIoU, mIoP, and mIoG.
+% Answering is evaluated by Sentence Similarity (S.), BERT-Score F1 (B.), and LLM-as-Judge score (J.). The \colorbox{bestgreen}{Best} and \colorbox{secondred}{Second-best} results are highlighted.}
+% \label{tab:main_results}
+% \begin{tabular}{p{2.9cm}cccccccccccccccccc}
+% \toprule
+% \multirow{3}{*}{\textbf{Methods}}
+% & \multicolumn{6}{c}{\textbf{Easy}}
+% & \multicolumn{6}{c}{\textbf{Hard}}
+% & \multicolumn{6}{c}{\textbf{All}} \\
+% \cmidrule(lr){2-7} \cmidrule(lr){8-13} \cmidrule(lr){14-19}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}}
+% & \multicolumn{3}{c}{\textbf{Grounding}}
+% & \multicolumn{3}{c}{\textbf{Answering}} \\
+% \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+% \cmidrule(lr){8-10} \cmidrule(lr){11-13}
+% \cmidrule(lr){14-16} \cmidrule(lr){17-19}
+% & IoU & IoP & IoG & S. & B. & J.
+% & IoU & IoP & IoG & S. & B. & J.
+% & IoU & IoP & IoG & S. & B. & J. \\
+% \midrule
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Closed Source}}} \\
+% Gemini-3.1-Flash-Lite
+% & 38.7 & 71.3 & 48.2 & 68.3 & 89.7 & 3.34
+% & 31.0 & 46.2 & 50.8 & 75.4 & 88.9 & 2.45
+% & 35.5 & 60.9 & 49.3 & 72.5 & 89.4 & 2.97 \\
+
+% GPT-5.4-Mini
+% & 45.8 & 68.5 & \cellcolor{secondred}62.0 & 72.1 & 88.9 & \cellcolor{secondred}3.58
+% & 32.6 & 44.9 & \cellcolor{bestgreen}60.7 & 75.6 & 88.6 & \cellcolor{secondred}3.16
+% & 40.3 & 58.6 & \cellcolor{bestgreen}61.5 & 74.2 & 88.8 & 3.41 \\
+
+% Claude-Sonnet-4.6
+% & \cellcolor{secondred}48.1 & 70.8 & \cellcolor{bestgreen}62.6 & 65.4 & 85.6 & \cellcolor{bestgreen}3.86
+% & 32.5 & 46.3 & \cellcolor{secondred}55.1 & 70.7 & 85.6 & \cellcolor{bestgreen}3.30
+% & \cellcolor{secondred}41.6 & 60.6 & \cellcolor{secondred}59.5 & 68.5 & 85.6 & \cellcolor{bestgreen}3.63 \\
+
+% \cdashline{1-19}[0.4pt/2pt]
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Open Source}}} \\
+% InternVL3.5-4B
+% & 19.8 & 46.4 & 32.9 & 70.8 & 88.9 & 2.30
+% & 12.6 & 29.8 & 32.6 & 65.4 & 88.3 & 1.86
+% & 16.8 & 39.4 & 32.8 & 68.5 & 88.6 & 2.12 \\
+
+% InternVL3.5-8B
+% & 22.4 & 66.5 & 27.6 & \cellcolor{secondred}76.6 & 90.2 & 2.88
+% & 16.0 & 49.1 & 21.9 & 69.4 & 89.5 & 2.29
+% & 19.8 & 59.3 & 25.2 & 73.6 & 89.9 & 2.63 \\
+
+% InternVL3.5-38B
+% & 27.2 & \cellcolor{secondred}72.8 & 33.1 & 76.2 & \cellcolor{secondred}90.4 & 2.84
+% & 22.8 & 52.8 & 30.8 & 70.4 & \cellcolor{secondred}89.9 & 2.39
+% & 25.4 & \cellcolor{secondred}64.5 & 32.2 & 73.8 & \cellcolor{secondred}90.2 & 2.66 \\
+
+% Qwen3-VL-4B
+% & 43.3 & 71.4 & 56.5 & 70.7 & 89.5 & 3.08
+% & 31.3 & 50.2 & 50.2 & 77.5 & 88.6 & 2.34
+% & 38.3 & 62.6 & 53.9 & 74.7 & 89.1 & 2.77 \\
+
+% Qwen3-VL-8B
+% & 40.9 & 72.3 & 52.8 & 71.5 & 89.8 & 3.28
+% & 30.3 & 50.7 & 47.1 & 78.7 & 88.6 & 2.51
+% & 36.6 & 63.4 & 50.4 & \cellcolor{secondred}75.7 & 89.3 & 2.96 \\
+
+% Qwen3-VL-30B-A3B
+% & 42.4 & 71.2 & 54.6 & 71.1 & 90.0 & 3.35
+% & \cellcolor{secondred}32.9 & \cellcolor{secondred}53.7 & 48.5 & \cellcolor{secondred}78.9 & 88.9 & 2.67
+% & 38.5 & 63.9 & 52.1 & 75.7 & 89.6 & 3.06 \\
+
+% \cdashline{1-19}[0.4pt/2pt]
+
+% \multicolumn{19}{l}{\textit{\textcolor{groupgray}{Object Finetuned}}} \\
+% Qwen3-VL-4B
+% & \cellcolor{bestgreen}51.4 & \cellcolor{bestgreen}73.1 & \cellcolor{secondred}62.5 & \cellcolor{bestgreen}78.0 & \cellcolor{bestgreen}92.2 & 3.26
+% & \cellcolor{bestgreen}33.6 & \cellcolor{bestgreen}54.5 & 44.6 & \cellcolor{bestgreen}82.4 & \cellcolor{bestgreen}91.6 & 3.07
+% & \cellcolor{bestgreen}44.0 & \cellcolor{bestgreen}65.4 & 55.1 & \cellcolor{bestgreen}80.6 & \cellcolor{bestgreen}91.9 & \cellcolor{secondred}3.56 \\
+% \bottomrule
+% \end{tabular}
+% \end{table*}
+
+\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\caption{
+Evaluation results on testing set of \textsc{ProcObject-10K}.
+Answering is evaluated by Sentence Similarity (S.), BERT-Score F1 (B.), and LLM-as-Judge score (J.).
+Grounding is evaluated by mean IoU\%, mean IoP\%, and mean IoG\%.
+The \colorbox{bestgreen}{Best} and \colorbox{secondred}{Second-best} results are highlighted.}
+\label{tab:main_results}
+\begin{tabular}{p{2.9cm}cccccccccccccccccc}
+\toprule
+\multirow{3}{*}{\textbf{Methods}}
+& \multicolumn{6}{c}{\textbf{Multi-hop Reasoning}}
+& \multicolumn{6}{c}{\textbf{Needle-in-a-Haystack}}
+& \multicolumn{6}{c}{\textbf{All}} \\
+\cmidrule(lr){2-7} \cmidrule(lr){8-13} \cmidrule(lr){14-19}
+& \multicolumn{3}{c}{\textbf{Answering}}
+& \multicolumn{3}{c}{\textbf{Grounding}}
+& \multicolumn{3}{c}{\textbf{Answering}}
+& \multicolumn{3}{c}{\textbf{Grounding}}
+& \multicolumn{3}{c}{\textbf{Answering}}
+& \multicolumn{3}{c}{\textbf{Grounding}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+\cmidrule(lr){8-10} \cmidrule(lr){11-13}
+\cmidrule(lr){14-16} \cmidrule(lr){17-19}
+& S. & B. & J. & IoU & IoP & IoG
+& S. & B. & J. & IoU & IoP & IoG
+& S. & B. & J. & IoU & IoP & IoG \\
+\midrule
+
+\multicolumn{19}{l}{\textit{\textcolor{groupgray}{Blind LLM}}} \\
+GPT-5.4-Mini
+& 74.0 & 89.2 & 3.13 & - & - & -
+& 71.7 & 89.0 & 3.15 & - & - & -
+& 73.1 & 89.1 & 3.14 & - & - & - \\
+
+Claude-Sonnet-4.6
+& 74.5 & 88.3 & 3.51 & - & - & -
+& 69.2 & 87.6 & 3.08 & - & - & -
+& 72.4 & 88.0 & 3.34 & - & - & - \\
+
+Qwen3-30B-A3B
+& 71.0 & 88.8 & 3.07 & - & - & -
+& 68.9 & 88.7 & 2.98 & - & - & -
+& 70.2 & 88.8 & 3.04 & - & - & - \\
+
+Llama-3.2-3B
+& 65.2 & 88.1 & 2.50 & - & - & -
+& 60.5 & 87.9 & 2.45 & - & - & -
+& 63.4 & 88.0 & 2.48 & - & - & - \\
+
+\cdashline{1-19}[0.4pt/2pt]
+
+\multicolumn{19}{l}{\textit{\textcolor{groupgray}{Closed-source MLLMs}}} \\
+Gemini-3.1-Flash-Lite
+& 68.3 & 89.7 & 3.34 & 38.7 & 71.3 & 48.2
+& 75.4 & 88.9 & 2.45 & 31.0 & 46.2 & 50.8
+& 71.1 & 89.4 & 2.99 & 35.7 & 61.5 & 49.2 \\
+
+GPT-5.4-Mini
+& 72.1 & 88.9 & 3.58 & 45.8 & 68.5 & 62.0
+& 75.6 & 88.6 & \cellcolor{secondred}3.16 & 32.6 & 44.9 & \cellcolor{bestgreen}60.7
+& 73.5 & 88.8 & 3.42 & 40.7 & 59.3 & \cellcolor{bestgreen}61.5 \\
+
+Claude-Sonnet-4.6
+& 65.4 & 85.6 & \cellcolor{bestgreen}3.86 & \cellcolor{secondred}48.1 & 70.8 & \cellcolor{bestgreen}62.6
+& 70.7 & 85.6 & \cellcolor{bestgreen}3.30 & 32.5 & 46.3 & \cellcolor{secondred}55.1
+& 67.5 & 85.6 & \cellcolor{bestgreen}3.64 & \cellcolor{secondred}42.0 & 61.3 & \cellcolor{secondred}59.7 \\
+
+\cdashline{1-19}[0.4pt/2pt]
+
+\multicolumn{19}{l}{\textit{\textcolor{groupgray}{Open-source MLLMs}}} \\
+InternVL3.5-4B
+& 70.8 & 88.9 & 2.30 & 19.8 & 46.4 & 32.9
+& 65.4 & 88.3 & 1.86 & 12.6 & 29.8 & 32.6
+& 68.7 & 88.7 & 2.13 & 17.0 & 39.9 & 32.8 \\
+
+InternVL3.5-8B
+& \cellcolor{secondred}76.6 & 90.2 & 2.88 & 22.4 & 66.5 & 27.6
+& 69.4 & 89.5 & 2.29 & 16.0 & 49.1 & 21.9
+& 73.8 & 89.9 & 2.65 & 19.9 & 59.7 & 25.4 \\
+
+InternVL3.5-38B
+& 76.2 & \cellcolor{secondred}90.4 & 2.84 & 27.2 & \cellcolor{secondred}72.8 & 33.1
+& 70.4 & \cellcolor{secondred}89.9 & 2.39 & 22.8 & 52.8 & 30.8
+& 73.9 & \cellcolor{secondred}90.2 & 2.66 & 25.5 & \cellcolor{secondred}65.0 & 32.2 \\
+
+Qwen3-VL-4B
+& 70.7 & 89.5 & 3.08 & 43.3 & 71.4 & 56.5
+& 77.5 & 88.6 & 2.34 & 31.3 & 50.2 & 50.2
+& 73.3 & 89.2 & 2.79 & 38.6 & 63.1 & 54.1 \\
+
+Qwen3-VL-8B
+& 71.5 & 89.8 & 3.28 & 40.9 & 72.3 & 52.8
+& 78.7 & 88.6 & 2.51 & 30.3 & 50.7 & 47.1
+& \cellcolor{secondred}74.3 & 89.3 & 2.98 & 36.8 & 63.9 & 50.6 \\
+
+Qwen3-VL-30B-A3B
+& 71.1 & 90.0 & 3.35 & 42.4 & 71.2 & 54.6
+& \cellcolor{secondred}78.9 & 88.9 & 2.67 & \cellcolor{secondred}32.9 & \cellcolor{secondred}53.7 & 48.5
+& 74.1 & 89.6 & 3.09 & 38.7 & 64.4 & 52.2 \\
+
+\cdashline{1-19}[0.4pt/2pt]
+
+\multicolumn{19}{l}{\textit{\textcolor{groupgray}{Object-centric Fine-tuned}}} \\
+Qwen3-VL-4B
+& \cellcolor{bestgreen}78.0 & \cellcolor{bestgreen}92.2 & \cellcolor{secondred}3.79 & \cellcolor{bestgreen}51.4 & \cellcolor{bestgreen}73.1 & \cellcolor{secondred}62.5
+& \cellcolor{bestgreen}82.4 & \cellcolor{bestgreen}91.6 & 3.07 & \cellcolor{bestgreen}33.6 & \cellcolor{bestgreen}54.5 & 44.6
+& \cellcolor{bestgreen}79.7 & \cellcolor{bestgreen}92.0 & \cellcolor{secondred}3.51 & \cellcolor{bestgreen}44.5 & \cellcolor{bestgreen}65.9 & 55.5 \\
+\bottomrule
+\end{tabular}
+% \vspace{-4pt}
+\end{table*}
+

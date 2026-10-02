@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProcObject-10K: Benchmarking Object-Centric Procedural Understanding in Instructional Videos</title>
+  <meta name="description" content="ProcObject-10K: 10,522 grounded VideoQA pairs that test whether multimodal LLMs reason about how objects change through a procedure, and where in the video the evidence is. NeurIPS 2026 Evaluations & Datasets Track.">
+  <meta name="keywords" content="ProcObject-10K, benchmark, object-centric, procedural understanding, instructional video, grounded VideoQA, temporal grounding, MLLM">
+  <meta property="og:title" content="ProcObject-10K: Benchmarking Object-Centric Procedural Understanding in Instructional Videos">
+  <meta property="og:description" content="A grounded VideoQA benchmark for object-centric procedural reasoning. MLLMs answer plausibly but fail to localize the evidence (mIoU < 45%).">
+  <meta property="og:image" content="https://wenliangguo.github.io/ProcObject-10K-Page/static/images/social.jpg">
+  <meta property="og:url" content="https://wenliangguo.github.io/ProcObject-10K-Page/">
+  <meta property="og:type" content="website">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://wenliangguo.github.io/ProcObject-10K-Page/static/images/social.jpg">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="./static/images/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./static/images/favicon.png">
+  <link rel="apple-touch-icon" href="./static/images/apple-touch-icon.png">
+  <script defer src="./static/data/results.js"></script>
+  <script defer src="./static/data/stats.js"></script>
+  <script defer src="./static/data/explorer.js"></script>
+  <script defer src="./static/js/index.js"></script>
+  <script defer src="./static/js/charts.js"></script>
+  <script defer src="./static/js/explorer.js"></script>
+</head>
+
+<body>
+
+<nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="#"><strong>ProcObject-10K</strong></a>
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMain">
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div id="navbarMain" class="navbar-menu">
+    <div class="navbar-start">
+      <a class="navbar-item" href="#types">QA Types</a>
+      <a class="navbar-item" href="#benchmark">Benchmark</a>
+      <a class="navbar-item" href="#explorer">Explorer</a>
+      <a class="navbar-item" href="#results">Results</a>
+      <a class="navbar-item" href="#method">Method</a>
+      <a class="navbar-item" href="#transfer">Transfer</a>
+      <a class="navbar-item" href="#citation">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================== HERO ============================== -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-widescreen">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">
+            <span class="method-name">ProcObject-10K</span>: Benchmarking Object-Centric<br class="br-wide">
+            Procedural Understanding in Instructional Videos
+          </h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><a href="https://wenliangguo.github.io/">Wenliang Guo</a>,</span>
+            <span class="author-block"><a href="https://www.egr.msu.edu/~yukong/">Yu Kong</a></span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Michigan State University</span>
+          </div>
+          <p class="venue-pill"><span>NeurIPS 2026</span> Evaluations &amp; Datasets Track</p>
+          <div class="publication-links">
+            <span class="link-block">
+              <a href="https://arxiv.org/abs/2512.03479" target="_blank" rel="noopener"
+                 class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><svg class="ico" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path fill="currentColor" d="M181.9 256.1c-5-16-4.9-46.9-2-46.9 8.4 0 7.6 36.9 2 46.9zm-1.7 47.2c-7.7 20.2-17.3 43.3-28.4 62.7 18.3-7 39-17.2 62.9-21.9-12.7-9.6-24.9-23.4-34.5-40.8zM86.1 428.1c0 .8 13.2-5.4 34.9-40.2-6.7 6.3-29.1 24.5-34.9 40.2zM248 160h136v328c0 13.3-10.7 24-24 24H24c-13.3 0-24-10.7-24-24V24C0 10.7 10.7 0 24 0h200v136c0 13.2 10.8 24 24 24zm-8 171.8c-20-12.2-33.3-29-42.7-53.8 4.5-18.5 11.6-46.6 6.2-64.2-4.7-29.4-42.4-26.5-47.8-6.8-5 18.3-.4 44.1 8.1 77-11.6 27.6-28.7 64.6-40.8 85.8-.1 0-.1.1-.2.1-27.1 13.9-73.6 44.5-54.5 68 5.6 6.9 16 10 21.5 10 17.9 0 35.7-18 61.1-61.8 25.8-8.5 54.1-19.1 79-23.2 21.7 11.8 47.1 19.5 64 19.5 29.2 0 31.2-32 19.7-43.4-13.9-13.6-54.3-9.7-73.6-7.2zM377 105L279 7c-4.5-4.5-10.6-7-17-7h-6v128h128v-6.1c0-6.3-2.5-12.4-7-16.9zm-74.1 255.3c4.1-2.7-2.5-11.9-42.8-9 37.1 15.8 42.8 9 42.8 9z"/></svg></span><span>Paper</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="https://github.com/WenliangGuo/ProcObject-10K" target="_blank" rel="noopener"
+                 class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><svg class="ico" viewBox="0 0 496 512" aria-hidden="true" focusable="false"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span><span>Code</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="https://huggingface.co/datasets/BrightGuo/ProcObject-10K" target="_blank" rel="noopener"
+                 class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><svg class="ico" viewBox="0 0 448 512" aria-hidden="true" focusable="false"><path fill="currentColor" d="M448 73.143v45.714C448 159.143 347.667 192 224 192S0 159.143 0 118.857V73.143C0 32.857 100.333 0 224 0s224 32.857 224 73.143zM448 176v102.857C448 319.143 347.667 352 224 352S0 319.143 0 278.857V176c48.125 33.143 136.208 48.572 224 48.572S399.874 209.143 448 176zm0 160v102.857C448 479.143 347.667 512 224 512S0 479.143 0 438.857V336c48.125 33.143 136.208 48.572 224 48.572S399.874 369.143 448 336z"/></svg></span><span>Dataset</span>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== ABSTRACT ============================== -->
+<section class="section" id="abstract">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 has-text-centered">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Procedural activities are fundamentally driven by object state transitions, yet existing instructional
+            video benchmarks remain action-centric and cannot evaluate whether models reason about how objects evolve
+            toward task completion. In this work, we introduce <span class="method-name">ProcObject-10K</span>, the
+            first benchmark that jointly evaluates object-centric reasoning and temporal evidence grounding in
+            instructional videos, across both egocentric and exocentric views. It comprises 10,522 open-ended VideoQA
+            pairs grounded in 1,799 video clips, spanning 137 tasks across 9 domains and five reasoning types covering
+            preconditions, state evolution, counterfactuals, mistakes, and readiness. Benchmarking 13 leading MLLMs
+            reveals a substantial answering-grounding gap: models produce plausible answers while failing to localize
+            the supporting evidence (mIoU &lt; 45%), exposing their reliance on linguistic priors rather than
+            fine-grained object dynamics.
+          </p>
+          <p>
+            As a step toward closing this gap, we further provide an object-centric supervised fine-tuning baseline
+            with pseudo object-level supervision and spatial-temporal constraints. Models fine-tuned on
+            <span class="method-name">ProcObject-10K</span> not only improve on the benchmark itself, but also
+            transfer effectively to other grounded VideoQA and embodied planning tasks. The dataset, annotations, and
+            evaluation toolkit are publicly released to support future research on object-centric procedural
+            understanding.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== QA TYPES (teaser) ============================== -->
+<section class="section teaser-types" id="types">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Five Object-Centric Reasoning Types</h2>
+    <p class="section-lead has-text-centered">
+      Earlier procedural benchmarks mostly ask which action comes next. Every
+      <span class="method-name">ProcObject-10K</span> question is about an object's state, has an open-ended
+      answer, and comes with the time spans in the video that support that answer.
+    </p>
+    <div class="type-grid" id="type-grid"><!-- filled by explorer.js from the examples --></div>
+    <p class="media-note has-text-centered">Frames are from test-set questions. Click a card to open that question in the
+      <a href="#explorer">Explorer</a>.</p>
+  </div>
+</section>
+
+<!-- ============================== BENCHMARK ============================== -->
+<section class="section" id="benchmark">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">The Benchmark</h2>
+    <p class="section-lead has-text-centered">
+      A grounded VideoQA task: the model watches a procedural clip, answers an open-ended question about an
+      object, and outputs the time spans that support its answer.
+    </p>
+    <div class="io-strip" aria-label="Task format">
+      <span class="io-chip"><svg class="ico" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path fill="currentColor" d="M488 64h-8v20c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12V64H96v20c0 6.6-5.4 12-12 12H44c-6.6 0-12-5.4-12-12V64h-8C10.7 64 0 74.7 0 88v336c0 13.3 10.7 24 24 24h8v-20c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v20h320v-20c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v20h8c13.3 0 24-10.7 24-24V88c0-13.3-10.7-24-24-24zM96 372c0 6.6-5.4 12-12 12H44c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40zm0-96c0 6.6-5.4 12-12 12H44c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40zm0-96c0 6.6-5.4 12-12 12H44c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40zm272 208c0 6.6-5.4 12-12 12H156c-6.6 0-12-5.4-12-12v-96c0-6.6 5.4-12 12-12h200c6.6 0 12 5.4 12 12v96zm0-168c0 6.6-5.4 12-12 12H156c-6.6 0-12-5.4-12-12v-96c0-6.6 5.4-12 12-12h200c6.6 0 12 5.4 12 12v96zm112 152c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40zm0-96c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40zm0-96c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40z"/></svg> video clip</span>
+      <span class="io-plus">+</span>
+      <span class="io-chip"><svg class="ico" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path fill="currentColor" d="M202.021 0C122.202 0 70.503 32.703 29.914 91.026c-7.363 10.58-5.093 25.086 5.178 32.874l43.138 32.709c10.373 7.865 25.132 6.026 33.253-4.148 25.049-31.381 43.63-49.449 82.757-49.449 30.764 0 68.816 19.799 68.816 49.631 0 22.552-18.617 34.134-48.993 51.164-35.423 19.86-82.299 44.576-82.299 106.405V320c0 13.255 10.745 24 24 24h72.471c13.255 0 24-10.745 24-24v-5.773c0-42.86 125.268-44.645 125.268-160.627C377.504 66.256 286.902 0 202.021 0zM192 373.459c-38.196 0-69.271 31.075-69.271 69.271 0 38.195 31.075 69.27 69.271 69.27s69.271-31.075 69.271-69.271-31.075-69.27-69.271-69.27z"/></svg> question about an object</span>
+      <span class="io-arrow">&rarr;</span>
+      <span class="io-chip io-model">MLLM</span>
+      <span class="io-arrow">&rarr;</span>
+      <code class="io-code">{"answer": "&hellip;", "evidence": [[t<sub>0</sub>, t<sub>1</sub>], &hellip;]}</code>
+    </div>
+
+    <h3 class="title is-4 has-text-centered section-subtitle mt-6">Construction Pipeline</h3>
+    <div class="pipeline-wrap">
+      <figure class="media-figure pipeline-figure">
+        <a href="./static/images/data_pipeline.jpg" target="_blank" rel="noopener" title="Open full size">
+        <img src="./static/images/data_pipeline.jpg" alt="Four-stage data generation pipeline of ProcObject-10K"
+             class="qualitative-image" loading="lazy" width="2000" height="1389"></a>
+      </figure>
+      <ol class="stage-list">
+        <li><span class="stage-no s1">1</span><div><b>Procedural video collection.</b> Egocentric cooking
+          (CaptainCook4D, EgoPER), egocentric assembly (HoloAssist) and exocentric Internet videos (COIN). The first
+          three include real execution errors. Corrupted, near-duplicate and &ge;30-min videos are removed.</div></li>
+        <li><span class="stage-no s2">2</span><div><b>Action-sequence sampling.</b> A sliding window over
+          <i>N</i>&nbsp;&isin;&nbsp;{2,&thinsp;3,&thinsp;4,&thinsp;5} consecutive action segments yields clips with
+          coherent object state changes; Qwen3.5 writes dense, object-centric captions for each.</div></li>
+        <li><span class="stage-no s3">3</span><div><b>Grounded QA generation.</b> Qwen3.5, with a prompt and
+          question templates for each type, turns the captions and sparse frames into a question, an answer and
+          supporting time spans.</div></li>
+        <li><span class="stage-no s4">4</span><div><b>Verification &amp; filtering.</b> Questions that an LLM answers
+          well from the text alone are dropped (about 30%, &sim;4,500). GPT-4o mini checks that the answer and the
+          evidence agree. Two reviewers independently check every QA pair; pairs that fail are corrected by hand.</div></li>
+      </ol>
+    </div>
+
+    <h3 class="title is-4 has-text-centered section-subtitle mt-6">Statistics</h3>
+    <div class="stat-tiles" id="stat-tiles">
+      <div class="stat-tile"><span class="st-val">10,522</span><span class="st-lbl">QA pairs</span></div>
+      <div class="stat-tile"><span class="st-val">1,799</span><span class="st-lbl">source videos</span></div>
+      <div class="stat-tile"><span class="st-val">211 h</span><span class="st-lbl">of video</span></div>
+      <div class="stat-tile"><span class="st-val">137 / 9</span><span class="st-lbl">tasks / domains</span></div>
+      <div class="stat-tile"><span class="st-val">72.3 s</span><span class="st-lbl">mean clip length</span></div>
+      <div class="stat-tile"><span class="st-val">1.74</span><span class="st-lbl">evidence spans per QA</span></div>
+      <div class="stat-tile"><span class="st-val">9,472 / 1,050</span><span class="st-lbl">train / test, video-disjoint</span></div>
+    </div>
+    <div class="chart-grid">
+      <figure class="chart-card"><figcaption class="chart-title">Videos per domain</figcaption>
+        <div class="chart" id="chart-domains" role="img" aria-label="Bar chart of videos per domain"></div></figure>
+      <figure class="chart-card"><figcaption class="chart-title">QA pairs per type, by temporal-search pattern</figcaption>
+        <div class="chart" id="chart-reasoning" role="img" aria-label="Stacked bar chart of QA types by reasoning pattern"></div></figure>
+      <figure class="chart-card"><figcaption class="chart-title">Clip length (QA pairs per 5-second bin)</figcaption>
+        <div class="chart" id="chart-duration" role="img" aria-label="Histogram of clip durations"></div></figure>
+      <figure class="chart-card"><figcaption class="chart-title">Evidence spans per question</figcaption>
+        <div class="chart" id="chart-spans" role="img" aria-label="Bar chart of evidence spans per question"></div></figure>
+    </div>
+    <p class="glossary has-text-centered">
+      <b>Multi-hop Reasoning</b>: evidence spread over several separate spans.
+      <b>Needle-in-a-Haystack</b>: one short, critical moment inside a long clip.
+      Charts are computed from the released annotations.
+    </p>
+
+    <h3 class="title is-4 has-text-centered section-subtitle mt-6">Comparison with Existing Datasets</h3>
+    <div class="table-wrap compare-wrap">
+      <table class="results-table compare-table">
+        <thead><tr><th class="first">Dataset</th><th>View</th><th>Object-centric</th><th>QA type</th><th>Evidence</th><th>Mistakes</th><th>Video domain</th></tr></thead>
+        <tbody>
+          <tr><td class="first">COIN</td><td>Exo</td><td class="no">&#10007;</td><td>&ndash;</td><td class="no">&#10007;</td><td class="no">&#10007;</td><td>Instructional</td></tr>
+          <tr><td class="first">ChangeIt</td><td>Exo</td><td class="yes">&#10003;</td><td>&ndash;</td><td class="no">&#10007;</td><td class="no">&#10007;</td><td>Instructional</td></tr>
+          <tr><td class="first">EgoSchema</td><td>Ego</td><td class="no">&#10007;</td><td>Multi-choice</td><td class="no">&#10007;</td><td class="no">&#10007;</td><td>Human activity</td></tr>
+          <tr><td class="first">EgoPER</td><td>Ego</td><td class="no">&#10007;</td><td>&ndash;</td><td class="no">&#10007;</td><td class="yes">&#10003;</td><td>Instructional</td></tr>
+          <tr><td class="first">CaptainCook4D</td><td>Ego</td><td class="no">&#10007;</td><td>&ndash;</td><td class="no">&#10007;</td><td class="yes">&#10003;</td><td>Instructional</td></tr>
+          <tr><td class="first">ProMQA</td><td>Exo</td><td class="no">&#10007;</td><td>Open-ended</td><td class="no">&#10007;</td><td class="yes">&#10003;</td><td>Instructional</td></tr>
+          <tr><td class="first">REXTIME</td><td>Exo</td><td class="no">&#10007;</td><td>Multi-choice</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td>Generic</td></tr>
+          <tr><td class="first">VideoInfer</td><td>Exo</td><td class="yes">&#10003;</td><td>Open-ended</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>Human activity</td></tr>
+          <tr><td class="first">MultiHop-EgoQA</td><td>Ego</td><td class="no">&#10007;</td><td>Open-ended</td><td class="yes">&#10003;</td><td class="no">&#10007;</td><td>Human activity</td></tr>
+          <tr><td class="first">TrackVerse</td><td>Exo</td><td class="yes">&#10003;</td><td>&ndash;</td><td class="no">&#10007;</td><td class="no">&#10007;</td><td>Generic</td></tr>
+          <tr><td class="first">EPIC-KITCHENS-100-MQA</td><td>Ego</td><td class="no">&#10007;</td><td>Open-ended</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>Instructional</td></tr>
+          <tr class="ours-row"><td class="first"><span class="method-name">ProcObject-10K</span></td><td>Ego + Exo</td><td class="yes">&#10003;</td><td>Open-ended</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td>Instructional</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== EXPLORER ============================== -->
+<section class="section" id="explorer">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Explore the Benchmark</h2>
+    <p class="section-lead has-text-centered">
+      Ten test questions, two per type, with the ground-truth evidence and the saved benchmark predictions of four
+      models. Play the clip and watch the playhead pass through each model's predicted spans; IoU is computed against
+      the ground truth, exactly as in the benchmark.
+    </p>
+    <div class="ex-picker" id="ex-picker" role="tablist" aria-label="Choose a test question"></div>
+    <div class="ex-panel" id="ex-panel">
+      <div class="ex-left">
+        <div class="ex-video-wrap">
+          <video id="ex-video" class="qualitative-video" muted playsinline preload="metadata"></video>
+          <div class="ex-badges" id="ex-badges"></div>
+        </div>
+        <div class="ex-controls">
+          <button class="ex-btn" id="ex-play" type="button" aria-label="Play or pause"><svg class="ico" viewBox="0 0 448 512" aria-hidden="true" focusable="false"><path fill="currentColor" d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z"/></svg></button>
+          <span class="ex-time" id="ex-time">0.0 / 0.0 s</span>
+          <span class="ex-speed" role="group" aria-label="Playback speed">
+            <button type="button" data-rate="1" aria-pressed="false">1&times;</button><button type="button" data-rate="2" class="is-on" aria-pressed="true">2&times;</button><button type="button" data-rate="4" aria-pressed="false">4&times;</button>
+          </span>
+        </div>
+        <div class="ex-timeline" id="ex-timeline" aria-label="Evidence timeline; click to seek"></div>
+        <p class="ex-legend-note">Shaded band = ground-truth evidence. Click or drag on the timeline to seek.</p>
+      </div>
+      <div class="ex-right">
+        <div class="ex-qtype" id="ex-qtype"></div>
+        <p class="ex-question" id="ex-question"></p>
+        <div class="ex-gt"><span class="ex-label">Reference answer</span><p id="ex-answer"></p></div>
+        <div class="ex-answers" id="ex-answers"></div>
+        <div class="ex-blind"><span class="ex-label"><svg class="ico" viewBox="0 0 640 512" aria-hidden="true" focusable="false"><path fill="currentColor" d="M320 400c-75.85 0-137.25-58.71-142.9-133.11L72.2 185.82c-13.79 17.3-26.48 35.59-36.72 55.59a32.35 32.35 0 0 0 0 29.19C89.71 376.41 197.07 448 320 448c26.91 0 52.87-4 77.89-10.46L346 397.39a144.13 144.13 0 0 1-26 2.61zm313.82 58.1l-110.55-85.44a331.25 331.25 0 0 0 81.25-102.07 32.35 32.35 0 0 0 0-29.19C550.29 135.59 442.93 64 320 64a308.15 308.15 0 0 0-147.32 37.7L45.46 3.37A16 16 0 0 0 23 6.18L3.37 31.45A16 16 0 0 0 6.18 53.9l588.36 454.73a16 16 0 0 0 22.46-2.81l19.64-25.27a16 16 0 0 0-2.82-22.45zm-183.72-142l-39.3-30.38A94.75 94.75 0 0 0 416 256a94.76 94.76 0 0 0-121.31-92.21A47.65 47.65 0 0 1 304 192a46.64 46.64 0 0 1-1.54 10l-73.61-56.89A142.31 142.31 0 0 1 320 112a143.92 143.92 0 0 1 144 144c0 21.63-5.29 41.79-13.9 60.11z"/></svg> GPT-5.4-Mini, question only (no video)</span><p id="ex-blind"></p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== RESULTS ============================== -->
+<section class="section" id="results">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Benchmark Results</h2>
+    <p class="section-lead has-text-centered">
+      13 models on the 1,050-question test split (4 blind LLMs that see only the question, 3 closed-source and
+      6 open-source MLLMs), plus Qwen3-VL-4B with our object-centric fine-tuning.
+    </p>
+
+    <div class="finding-grid">
+      <figure class="chart-card finding">
+        <figcaption><span class="finding-no">1</span><span><b>Answers look fine; evidence does not.</b>
+          On the full test split no model reaches 45% mIoU, while the three larger blind LLMs, which never see the video, still score
+          3.0&ndash;3.3 with the judge.</span></figcaption>
+        <div class="chart" id="chart-gap" role="img" aria-label="Scatter plot of LLM-judge score against grounding mIoU"></div>
+      </figure>
+      <figure class="chart-card finding">
+        <figcaption><span class="finding-no">2</span><span><b>Needles are harder than multi-hop.</b>
+          Every model localizes a single short moment worse than evidence spread over several spans.</span></figcaption>
+        <div class="chart" id="chart-needle" role="img" aria-label="Dumbbell chart of mIoU on Multi-hop versus Needle questions"></div>
+      </figure>
+    </div>
+
+    <h3 class="title is-4 has-text-centered section-subtitle mt-6">Main Results</h3>
+    <div class="buttons has-addons is-centered result-tabs" role="tablist" id="result-tabs">
+      <button class="button is-rounded is-selected is-link" type="button" role="tab" aria-selected="true" data-split="2">All</button>
+      <button class="button is-rounded" type="button" role="tab" aria-selected="false" data-split="0"><span class="lbl-long">Multi-hop Reasoning</span><span class="lbl-short">Multi-hop</span></button>
+      <button class="button is-rounded" type="button" role="tab" aria-selected="false" data-split="1"><span class="lbl-long">Needle-in-a-Haystack</span><span class="lbl-short">Needle</span></button>
+    </div>
+    <div class="table-wrap main-table-wrap">
+      <table class="results-table" id="main-table">
+        <caption id="main-caption"></caption>
+        <thead>
+          <tr><th></th><th colspan="3" class="group">Answering</th><th colspan="3" class="group">Grounding (%)</th></tr>
+          <tr><th class="first">Model</th><th>S.&uarr;</th><th>B.&uarr;</th><th>J.&uarr;</th><th>mIoU&uarr;</th><th>mIoP&uarr;</th><th>mIoG&uarr;</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="glossary">
+      <b>Metrics.</b> S. = sentence similarity, B. = BERTScore F1, J. = LLM-as-judge score (0&ndash;5, the mean of
+      GPT-5-mini, Qwen3 and Llama-3.2 judges over four dimensions: contextual integration, detail orientation,
+      contextual understanding and temporal understanding). Grounding uses set-level, interval-merged IoU between
+      predicted and ground-truth spans; mIoP and mIoG divide by the predicted and the ground-truth length instead.
+      <b>Bold</b> / <u>underline</u> = best / second best, as in the paper (Table 2).
+    </p>
+
+    <h3 class="title is-4 has-text-centered section-subtitle mt-6">By Question Type</h3>
+    <figure class="media-figure radar-figure">
+      <a href="./static/images/radar_chart.jpg" target="_blank" rel="noopener" title="Open full size">
+      <img src="./static/images/radar_chart.jpg" alt="Radar charts of LLM-judge score and evidence IoU for each QA type"
+           class="qualitative-image" loading="lazy" width="2000" height="909"></a>
+      <figcaption class="media-caption">
+        Judge score (left) and evidence IoU (right) for each of the five QA types (paper Fig. 4). Mistake and
+        readiness questions, which mostly hinge on one short moment, have the lowest IoU across models.
+        <a class="open-full" href="./static/images/radar_chart.jpg" target="_blank" rel="noopener">Open full size</a>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================== METHOD ============================== -->
+<section class="section" id="method">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">An Object-Centric Fine-Tuning Baseline</h2>
+    <p class="section-lead has-text-centered">
+      Standard SFT supervises only the text of the answer, never which objects, or which moments, the answer rests
+      on. We add that supervision cheaply: pseudo object labels from a VLM and an open-vocabulary detector, and two
+      light auxiliary heads that predict <i>where</i> and <i>when</i> the question's objects appear.
+    </p>
+
+    <figure class="media-figure method-figure">
+      <div class="svg-scroll">
+      <svg class="method-svg" viewBox="0 0 1000 400" role="img" aria-labelledby="method-svg-title">
+        <title id="method-svg-title">Object-centric SFT: pseudo labels supervise a spatial and a temporal head; the heads are removed at inference</title>
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="m-arrowhead"/>
+          </marker>
+        </defs>
+        <!-- lane labels -->
+        <text x="20" y="28" class="m-lane">Pseudo object labels &middot; training split only</text>
+        <rect x="12" y="40" width="976" height="136" rx="14" class="m-lane-bg"/>
+        <text x="20" y="214" class="m-lane">Qwen3-VL-4B fine-tuning</text>
+        <rect x="12" y="226" width="976" height="160" rx="14" class="m-lane-bg"/>
+
+        <!-- top lane -->
+        <g class="m-box"><rect x="32" y="66" width="150" height="84" rx="10"/>
+          <text x="107" y="98" class="m-t">QA pair</text>
+          <text x="107" y="120" class="m-s">question + answer</text></g>
+        <g class="m-box"><rect x="222" y="66" width="190" height="84" rx="10"/>
+          <text x="317" y="92" class="m-t">Qwen3.5</text>
+          <text x="317" y="113" class="m-s">extracts object phrases</text>
+          <text x="317" y="133" class="m-s m-em">&ldquo;bowl&rdquo; &middot; &ldquo;raisins&rdquo; &middot; &ldquo;spoon&rdquo;</text></g>
+        <g class="m-box"><rect x="452" y="66" width="190" height="84" rx="10"/>
+          <text x="547" y="92" class="m-t">Grounding DINO</text>
+          <text x="547" y="113" class="m-s">boxes + confidence</text>
+          <text x="547" y="133" class="m-s">on each input frame</text></g>
+        <g class="m-box m-label"><rect x="682" y="52" width="290" height="52" rx="10"/>
+          <text x="827" y="74" class="m-t">Soft patch masks M&#771;</text>
+          <text x="827" y="93" class="m-s">box overlap per patch, in [0,1]<tspan baseline-shift="super" font-size="9">T&times;P</tspan></text></g>
+        <g class="m-box m-label"><rect x="682" y="112" width="290" height="52" rx="10"/>
+          <text x="827" y="134" class="m-t">Object presence y&#771;<tspan baseline-shift="sub" font-size="10">t</tspan></text>
+          <text x="827" y="153" class="m-s">1 if mean box confidence s&#772;<tspan baseline-shift="sub" font-size="9">t</tspan> &gt; &tau;, else 0</text></g>
+        <line x1="182" y1="108" x2="218" y2="108" class="m-edge" marker-end="url(#arr)"/>
+        <line x1="412" y1="108" x2="448" y2="108" class="m-edge" marker-end="url(#arr)"/>
+        <path d="M642,100 C660,100 662,78 678,78" class="m-edge" marker-end="url(#arr)"/>
+        <path d="M642,116 C660,116 662,138 678,138" class="m-edge" marker-end="url(#arr)"/>
+
+        <!-- bottom lane -->
+        <g class="m-box"><rect x="32" y="292" width="140" height="64" rx="10"/>
+          <text x="102" y="318" class="m-t">Video</text>
+          <text x="102" y="338" class="m-s">T sampled frames</text></g>
+        <g class="m-box"><rect x="206" y="292" width="150" height="64" rx="10"/>
+          <text x="281" y="318" class="m-t">Vision encoder</text>
+          <text x="281" y="338" class="m-s">P patches per frame</text></g>
+        <g class="m-box m-llm"><rect x="430" y="292" width="170" height="64" rx="10"/>
+          <text x="515" y="318" class="m-t">LLM</text>
+          <text x="515" y="338" class="m-s">+ question</text></g>
+        <g class="m-box"><rect x="640" y="292" width="200" height="64" rx="10"/>
+          <text x="740" y="318" class="m-t m-mono">{"answer", "evidence"}</text>
+          <text x="740" y="338" class="m-s">generated text</text></g>
+        <line x1="172" y1="324" x2="202" y2="324" class="m-edge" marker-end="url(#arr)"/>
+        <line x1="356" y1="324" x2="426" y2="324" class="m-edge" marker-end="url(#arr)"/>
+        <line x1="600" y1="324" x2="636" y2="324" class="m-edge" marker-end="url(#arr)"/>
+        <g class="m-loss"><rect x="866" y="304" width="100" height="40" rx="20"/>
+          <text x="916" y="329" class="m-t">L<tspan baseline-shift="sub" font-size="10">gen</tspan></text></g>
+        <line x1="840" y1="324" x2="862" y2="324" class="m-edge" marker-end="url(#arr)"/>
+
+        <!-- aux heads (training only) -->
+        <g class="m-head"><rect x="206" y="240" width="122" height="38" rx="9"/>
+          <text x="267" y="264" class="m-t">Spatial head &alpha;<tspan baseline-shift="sub" font-size="10">t,p</tspan></text></g>
+        <g class="m-head"><rect x="340" y="240" width="130" height="38" rx="9"/>
+          <text x="405" y="264" class="m-t">Temporal head &beta;<tspan baseline-shift="sub" font-size="10">t</tspan></text></g>
+        <path d="M260,292 V282" class="m-edge m-dash" marker-end="url(#arr)"/>
+        <path d="M318,292 C318,284 400,292 400,282" class="m-edge m-dash" marker-end="url(#arr)"/>
+        <g class="m-loss"><rect x="510" y="236" width="104" height="38" rx="19"/>
+          <text x="562" y="260" class="m-t">L<tspan baseline-shift="sub" font-size="10">spl</tspan> + L<tspan baseline-shift="sub" font-size="10">tmp</tspan></text></g>
+        <line x1="470" y1="256" x2="506" y2="256" class="m-edge m-dash" marker-end="url(#arr)"/>
+        <path d="M267,240 C267,224 470,224 512,244" class="m-edge m-dash" marker-end="url(#arr)"/>
+        <path d="M827,164 C827,215 700,214 616,246" class="m-edge m-dash" marker-end="url(#arr)"/>
+        <text x="740" y="236" class="m-s m-note">pseudo labels as targets</text>
+        <text x="32" y="378" class="m-note-strong">Dashed: training only, removed at inference.</text>
+      </svg>
+      </div>
+      <ol class="method-mobile" aria-label="Object-centric SFT, step by step">
+        <li class="mm-lane">Pseudo object labels (training split only)</li>
+        <li class="mm-box">QA pair <span>question + answer</span></li>
+        <li class="mm-arrow">&darr;</li>
+        <li class="mm-box">Qwen3.5 <span>extracts object phrases: &ldquo;bowl&rdquo;, &ldquo;raisins&rdquo;, &ldquo;spoon&rdquo;</span></li>
+        <li class="mm-arrow">&darr;</li>
+        <li class="mm-box">Grounding DINO <span>boxes + confidence on each input frame</span></li>
+        <li class="mm-arrow">&darr;</li>
+        <li class="mm-row"><span class="mm-box mm-label">Soft patch masks M&#771;<span>box overlap per patch</span></span>
+          <span class="mm-box mm-label">Object presence y&#771;<sub>t</sub><span>1 if s&#772;<sub>t</sub> &gt; &tau;</span></span></li>
+        <li class="mm-lane">Qwen3-VL-4B fine-tuning</li>
+        <li class="mm-box">Video &rarr; vision encoder <span>T frames, P patches each</span></li>
+        <li class="mm-arrow">&darr;</li>
+        <li class="mm-box mm-llm">LLM + question &rarr; {"answer", "evidence"} <span>&rarr; L<sub>gen</sub></span></li>
+        <li class="mm-lane">Training-only branch from the vision encoder</li>
+        <li class="mm-row"><span class="mm-box mm-head">Spatial head &alpha;<sub>t,p</sub><span>&rarr; L<sub>spl</sub> vs M&#771;</span></span>
+          <span class="mm-box mm-head">Temporal head &beta;<sub>t</sub><span>&rarr; L<sub>tmp</sub> vs y&#771;</span></span></li>
+        <li class="mm-note">The dashed heads are removed at inference.</li>
+      </ol>
+      <figcaption class="media-caption">
+        A spatial head after the vision encoder predicts, for every patch, whether it overlaps a supporting object
+        (binary cross-entropy against the soft masks M&#771;, with a per-frame weight w<sub>t</sub> from the average
+        box confidence). A temporal head predicts whether each frame shows the supporting objects (binary
+        cross-entropy against y&#771;). Both heads are dropped after training, so the
+        fine-tuned model is a plain Qwen3-VL checkpoint that generates the answer and its evidence, at no extra
+        inference cost.
+      </figcaption>
+    </figure>
+
+    <div class="objective-card">
+      <div class="objective-eq">
+        <i>L</i> = <i>L</i><sub>gen</sub> + &lambda;<sub>spl</sub>&thinsp;<i>L</i><sub>spl</sub> + &lambda;<sub>tmp</sub>&thinsp;<i>L</i><sub>tmp</sub>
+      </div>
+      <p>The answer-generation loss stays the main signal. The auxiliary weights are small and warmed up during
+        training, so the constraints shape the visual representation without overwhelming answer generation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== TRANSFER ============================== -->
+<section class="section" id="transfer">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Transfer Beyond the Benchmark</h2>
+    <p class="section-lead has-text-centered">
+      Fine-tuned only on <span class="method-name">ProcObject-10K</span>, the model is applied zero-shot to another
+      grounded VideoQA benchmark and to embodied planning. &Dagger; = fine-tuned with the generative loss only, without
+      the spatial and temporal constraints.
+    </p>
+    <div class="transfer-grid">
+      <div class="transfer-card" id="transfer-multihop">
+        <h3 class="title is-5">Grounded VideoQA &middot; MultiHop-EgoQA</h3>
+        <p class="app-text">General procedural questions over long egocentric videos, scored with that benchmark's own
+          protocol (LLM score from 0 to 10). Fine-tuning on <span class="method-name">ProcObject-10K</span> beats
+          GeLM-7B, a model trained on MultiHop-EgoQA itself, on mIoU.</p>
+        <div class="bars-card tight">
+          <div class="bars" id="bars-mh-iou"></div>
+          <div class="bars" id="bars-mh-llm"></div>
+        </div>
+        <details class="full-table"><summary>Full table (paper Table 4)</summary>
+          <div class="table-wrap"><table class="results-table" id="mh-table">
+            <thead><tr><th class="first">Method</th><th>Input</th><th>mIoP</th><th>mIoG</th><th>IoU@0.3</th><th>mIoU</th><th>Sent. Sim.</th><th>LLM Score</th></tr></thead>
+            <tbody></tbody></table></div>
+        </details>
+      </div>
+      <div class="transfer-card" id="transfer-alfred">
+        <h3 class="title is-5">Embodied Planning &middot; ALFRED</h3>
+        <p class="app-text">The fine-tuned model replaces the language planner inside FLARE, a framework designed for
+          ALFRED's long-horizon household tasks. As a zero-shot planner it slightly exceeds FLARE with GPT-4 on
+          success rate (41.33 vs 40.88 on unseen scenes).</p>
+        <div class="bars-card tight">
+          <div class="bars" id="bars-al-unseen"></div>
+          <div class="bars" id="bars-al-seen"></div>
+        </div>
+        <details class="full-table"><summary>Full table (paper Table 5)</summary>
+          <div class="table-wrap"><table class="results-table" id="al-table">
+            <caption>SR = success rate, GC = goal-condition success (%).</caption>
+            <thead>
+              <tr><th></th><th colspan="2" class="group">Test seen</th><th colspan="2" class="group">Test unseen</th></tr>
+              <tr><th class="first">Method</th><th>SR</th><th>GC</th><th>SR</th><th>GC</th></tr></thead>
+            <tbody></tbody></table></div>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== CITATION ============================== -->
+<section class="section" id="citation">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3 has-text-centered">BibTeX</h2>
+        <div class="citation-card">
+          <div class="citation-head">
+            <p class="citation-hint">If you find <span class="method-name">ProcObject-10K</span> useful, please cite:</p>
+            <button class="button is-small is-light citation-copy-btn" id="copy-citation-btn" type="button">Copy BibTeX</button>
+          </div>
+          <pre class="citation-pre"><code id="citation-bibtex">@inproceedings{guo2026procobject,
+  title     = {{ProcObject-10K}: Benchmarking Object-Centric Procedural Understanding in Instructional Videos},
+  author    = {Guo, Wenliang and Kong, Yu},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS), Evaluations and Datasets Track},
+  year      = {2026},
+  url       = {https://arxiv.org/abs/2512.03479}
+}</code></pre>
+        </div>
+        <p class="media-note">Please also cite the source datasets: CaptainCook4D, EgoPER, HoloAssist and COIN.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>
+            Video excerpts on this page come from
+            <a href="https://captaincook4d.github.io/captain-cook/">CaptainCook4D</a>,
+            <a href="https://github.com/robert80203/EgoPER_official">EgoPER</a>,
+            <a href="https://holoassist.github.io/">HoloAssist</a> and
+            <a href="https://coin-dataset.github.io/">COIN</a> and remain under their original licenses; the
+            annotations are released under CC BY-NC 4.0.
+          </p>
+          <p>
+            This website is adapted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>
+            project page template and is licensed under a
+            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons
+            Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="viz-tip" id="viz-tip" role="tooltip" hidden></div>
+</body>
+</html>

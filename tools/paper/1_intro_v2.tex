@@ -1,0 +1,63 @@
+\section{Introduction}
+\label{sec:intro}
+
+Human daily activities are inherently procedural, spanning scenarios such as cooking \cite{damen2020epic,peddi2024captaincook4d}, assembly \cite{sener2022assembly101}, and medical procedures \cite{ozsoy2025egoexor}. These activities are governed by an underlying \emph{procedural structure}, where actions operate on objects to induce state transitions, forming causal dependencies across steps toward task completion. For example, cracking an egg enables mixing, and mixing produces a liquid state required for subsequent cooking. Understanding such structure requires not only recognizing actions \cite{Bao_2021_ICCV}, but reasoning about how object states evolve over time \cite{souvcek2022look} and how these changes constrain future actions. This capability is fundamental for future intelligent systems that aim to assist humans on procedural tasks by watching and learning from instructional videos.
+
+Existing work on procedural understanding predominantly adopts an action-centric perspective. Representative approaches construct symbolic graphs over action sequences to model dependencies \cite{jang2023multimodal, ashutosh2023video, soran2015generating, sohn2020meta, Huang_2025_CVPR, lee2025error}, or rely on masked modeling to recover missing action segments and implicitly learn structure \cite{narasimhan2023learning, lin2024vedit, zhong2023learning}. Despite methodological differences, these approaches share a common assumption that procedural structure is determined by action transitions alone.
+
+However, this assumption overlooks a key property of procedural activities whose goal is achieved through progressive transformation of object states under human interaction. Procedural causality is therefore not fully captured by action sequences, but is also reflected in how object states evolve over time. Direct evidence is that the same action can produce different outcomes depending on execution conditions \cite{guo2026procedural}, which in turn alters the set of valid subsequent actions \cite{niu2024schema}. As a result, action-centric representations of procedural structure lack sufficient object-state awareness, limiting their ability to support consistent reasoning about procedural progress and causal dependencies.
+
+In this work, we study the procedural understanding of instructional videos from an object-centric perspective, where object state dynamics serves as an observable signal for modeling procedural structure. We formulate a procedure as a sequence of temporally grounded object state transitions with localized evidence and precondition constraints, enabling explicit evaluation of whether models can identify relevant objects, localize state changes, and reason about their causal roles. However, previous benchmarks fail to support such evaluation, because existing instructional video datasets \cite{tang2019coin, lee2024error, peddi2024captaincook4d, hasegawa2024promqa, qi2026llavaction} focus on action sequences without modeling object state changes, while object-centric datasets \cite{souvcek2022look, wang2025object, wei2025trackverse} lack goal-driven procedural structure or object-level causal dependencies. Consequently, current benchmarks fail to evaluate whether models reason over object state dynamics, instead allowing strong performance through reliance on action patterns.
+
+To bridge this gap, we introduce \textsc{ProcObject-10K}, an instructional video benchmark for object-centric procedural understanding. It is formulated as grounded VideoQA task \cite{di2023groundvqa, chen2025grounded, xiao2024can, gupta2025toga} where each sample requires reasoning over temporally localized evidence of object state changes. The dataset contains 1{,}799 video clips and 10,522 question-answer pairs with aligned evidence spans, covering 137 diverse tasks across 9 domains. It is constructed via a semi-automated pipeline with VLM generated annotations followed by model-based and manual verification and refinement for temporal and causal consistency. To systematically evaluate procedural reasoning, we define five types of questions shown in Figure \ref{fig:qa_type}: Precondition Grounding, Object State Evolution, Counterfactual Reasoning, Mistake Recognition, and Readiness Assessment, covering complementary aspects of procedural structures. Our benchmarking results expose a critical Answering-Grounding Gap: while leading MLLMs achieve plausible performance in language answering, they consistently fail to pinpoint the underlying temporal evidence, with grounding mIoU generally remaining below 45\%. This discrepancy reveals that existing models often rely on linguistic priors rather than achieving a fine-grained object-centric understanding of procedural evolution.
+
+\begin{table*}[t]
+\renewcommand{\arraystretch}{1.0}
+\centering
+\caption{Dataset comparison. \textsc{ProcObject-10K} provides a comprehensive evaluation of open-ended question answering, temporal evidence grounding, object-centric reasoning, and mistake understanding across both egocentric and exocentric instructional videos.}
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Datasets} & \textbf{View} & \textbf{Object-centric} & \textbf{QA Type} & \textbf{Evidence} & \textbf{Mistake} & \textbf{Video Domain} \\
+\midrule
+COIN \cite{tang2019coin} & \underline{Exo} & \ding{55} & - & \ding{55} & \ding{55} & Instructional \\
+ChangeIt \cite{souvcek2022look} & \underline{Exo} & \ding{51} & - & \ding{55} & \ding{55} & Instructional \\
+EgoSchema \cite{mangalam2023egoschema} & Ego & \ding{55} & Multi-choice & \ding{55} & \ding{55} & Human Activity \\
+EgoPER \cite{lee2024error} & Ego & \ding{55} & - & \ding{55} & \ding{51} & Instructional \\
+CaptainCook4D \cite{peddi2024captaincook4d} & Ego & \ding{55} & - & \ding{55} & \ding{51} & Instructional \\
+ProMQA \cite{hasegawa2024promqa} & \underline{Exo} & \ding{55} & Open-ended & \ding{55} & \ding{51} & Instructional\\
+REXTIME \cite{chen2024rextime} & \underline{Exo} & \ding{55} & Multi-choice & \ding{51} & \ding{55} & Generic \\
+VideoInfer \cite{wang2025object} & \underline{Exo} & \ding{51} & Open-ended & \ding{51} & \ding{51} & Human Activity \\
+MULTIHOP-EGOQA \cite{chen2025grounded} & Ego & \ding{55} & Open-ended & \ding{51} & \ding{55} & Human Activity \\
+TrackVerse \cite{wei2025trackverse} & \underline{Exo} & \ding{51} & - & \ding{55} & \ding{55} & Generic \\
+EPIC-KITCHENS-100-MQA \cite{qi2026llavaction} & Ego & \ding{55} & Open-ended & \ding{51} & \ding{51} & Instructional \\
+\textbf{\textsc{ProcObject-10K}} & Ego+\underline{Exo} & \ding{51} & Open-ended & \ding{51} & \ding{51} & Instructional \\
+\bottomrule
+\end{tabular}%
+}
+% \vspace{-4pt}
+\label{tab:dataset}
+\end{table*}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/QA_types.pdf}
+    \caption{QA types in \textsc{ProcObject-10K} dataset, which centers on object-level understanding to capture temporal and spatial dynamics, enabling benchmarking from diverse perspectives.}
+    \vspace{-14pt}
+    \label{fig:qa_type}
+\end{figure}
+
+To further validate the diagnostic value of the benchmark, we introduce an object-centric supervised fine-tuning (SFT) framework that explicitly encourages MLLMs to attend to the dynamic evolution of action-relevant objects. To this end, we construct object-level pseudo labels using an object grounding model \cite{liu2023grounding} and a vision-language model \cite{qwen3.5}, and apply spatial and temporal attention constraints as supervision signals to guide models toward relevant objects and key frames. This training strategy improves both grounding accuracy and reasoning performance, suggesting that explicit supervision on object state dynamics addresses the failure modes exposed by the benchmark.
+
+Experimental results show that the learned object-centric representation not only improves performance on \textsc{ProcObject-10K}, but also exhibits strong generalization. The model fine-tuned on \textsc{ProcObject-10K} transfers effectively to other procedural VideoQA benchmarks \cite{chen2025grounded} under zero-shot settings, and achieves improved performance on embodied instruction following tasks \cite{kim2025multimodal, ALFRED20} when used as zero-shot planners. These results indicate that reasoning over object state dynamics yields a transferable capability that extends beyond the object-centric benchmark setting, highlighting the broader value of \textsc{ProcObject-10K} for procedural understanding.
+
+In summary, our contributions are as follows:
+\begin{itemize}[leftmargin=0.5cm]
+\vspace{-2mm}
+\item We introduce \textsc{ProcObject-10K}, a benchmark for object-centric procedural understanding, featuring 10{,}522 VideoQA pairs grounded in 1{,}799 video clips across 137 tasks and 9 domains.
+\item We propose an SFT framework that incorporates object-level supervision and spatial-temporal constraints to implicitly model procedural structure and learn object-centric representation.
+\item We empirically show that object-centric understanding not only improves procedural reasoning and grounding, but also generalizes to other  VideoQA and even embodied planning tasks.
+\vspace{-2mm}
+\end{itemize}
