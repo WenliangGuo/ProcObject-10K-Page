@@ -192,18 +192,115 @@
   }
   const groupColor = (g) => (g === 'ours' ? C.ours : g === 'closed' ? C.closed : g === 'open' ? C.open : C.blind);
 
+  // Greedy collision-free label placement: try positions around each point (nearest first),
+  // skip any that leave the bounds or touch a point or an already placed label; far positions get a
+  // thin leader line back to their point.
+  function rectHitsCircle(rc, c) {
+    const nx = Math.max(rc.x0, Math.min(c.x, rc.x1)), ny = Math.max(rc.y0, Math.min(c.y, rc.y1));
+    return (nx - c.x) ** 2 + (ny - c.y) ** 2 < c.r * c.r;
+  }
+  function layoutLabels(svg, items, opts) {
+    const placed = opts.rects.slice();
+    const leaders = [];   // sampled points of leader lines already drawn: later labels must not cover them
+    const B = opts.bounds;
+    const free = (rc) => rc.x0 >= B.x0 && rc.x1 <= B.x1 && rc.y0 >= B.y0 && rc.y1 <= B.y1
+      && !placed.some((p) => rc.x0 < p.x1 && rc.x1 > p.x0 && rc.y0 < p.y1 && rc.y1 > p.y0)
+      && !leaders.some(([px, py]) => px > rc.x0 && px < rc.x1 && py > rc.y0 && py < rc.y1)
+      && !opts.circles.some((c) => rectHitsCircle(rc, c));
+    // A leader line must not pass near any other point, or the label reads as belonging to it.
+    const leaderEnd = (it, rc) => [Math.max(rc.x0, Math.min(it.x, rc.x1)), Math.max(rc.y0 + 2, Math.min(it.y, rc.y1 - 2))];
+    const leaderClear = (it, rc) => {
+      const [ex, ey] = leaderEnd(it, rc);
+      const n = Math.hypot(ex - it.x, ey - it.y) || 1;
+      const sx = it.x + ((ex - it.x) / n) * (it.r + 1), sy = it.y + ((ey - it.y) / n) * (it.r + 1);   // drawn from the edge
+      // ...nor through a label that is already placed (sampled along the segment).
+      for (let k = 1; k < 24; k++) {
+        const px = sx + ((ex - sx) * k) / 24, py = sy + ((ey - sy) * k) / 24;
+        if (placed.some((p) => px > p.x0 && px < p.x1 && py > p.y0 && py < p.y1)) return false;
+      }
+      return !opts.circles.some((c) => {
+        if (Math.hypot(c.x - it.x, c.y - it.y) < 1) return false;   // its own point
+        const vx = ex - sx, vy = ey - sy, L2 = vx * vx + vy * vy || 1;
+        const u = Math.max(0, Math.min(1, ((c.x - sx) * vx + (c.y - sy) * vy) / L2));
+        return Math.hypot(sx + u * vx - c.x, sy + u * vy - c.y) < c.r + 2;
+      });
+    };
+    const steps = opts.steps || [0, 10, 22, 36, 52, 72, 96];
+    const out = [];
+    let fallbacks = 0, reach = 0;
+    items.forEach((it) => {
+      const t = el('text', { class: it.cls || '', style: 'font-size:11px;pointer-events:none' }, svg, it.text);
+      const box = (lx, ly, anchor) => {   // the browser's own text box at this position
+        t.setAttribute('x', lx); t.setAttribute('y', ly); t.setAttribute('text-anchor', anchor);
+        const b = t.getBBox();
+        return { x0: b.x - 1, x1: b.x + b.width + 1, y0: b.y - 1, y1: b.y + b.height + 1 };
+      };
+      // Candidates: the 8 compass positions close to the point first, then a 16-angle sweep at
+      // growing distances (these get a leader line).
+      const cands = [];
+      for (const st of steps) {
+        const d = it.r + 4 + st;
+        const angles = opts.angles || (st === 0 ? [0, 180, -90, 90, -40, 40, -140, 140] : Array.from({ length: 16 }, (_, k) => k * 22.5 - 180));
+        angles.forEach((deg) => {
+          const th = (deg * Math.PI) / 180, cx = Math.cos(th), sy = Math.sin(th);
+          const anchor = cx > 0.35 ? 'start' : cx < -0.35 ? 'end' : 'middle';
+          cands.push([it.x + d * cx, it.y + d * sy + (sy > 0.35 ? 8 : sy < -0.35 ? 0 : 4), anchor, st]);
+        });
+      }
+      let best = null;
+      for (const [lx, ly, anchor, st] of cands) {
+        const rc = box(lx, ly, anchor);
+        if (free(rc) && (st === 0 || opts.leaders === false || leaderClear(it, rc))) { best = { lx, ly, anchor, rc, st }; break; }
+      }
+      if (!best) {
+        fallbacks += 1;
+        best = { lx: it.x + it.r + 4, ly: it.y + 4, anchor: 'start', rc: box(it.x + it.r + 4, it.y + 4, 'start'), st: 0 };
+      }
+      reach += best.st;
+      placed.push(best.rc);
+      if (best.st > 0) {
+        const [ex, ey] = leaderEnd(it, best.rc);
+        for (let k = 1; k < 24; k++) leaders.push([it.x + ((ex - it.x) * k) / 24, it.y + ((ey - it.y) * k) / 24]);
+      }
+      t.remove();
+      out.push({ it, best, leader: best.st > 0 ? leaderEnd(it, best.rc) : null });
+    });
+    return { out, score: fallbacks * 10000 + reach };
+  }
+
+  // Try a few placement orders and keep the one with no unplaceable label and the shortest leaders.
+  function placeLabels(svg, items, opts) {
+    const head = items.filter((it) => it.first), rest = items.filter((it) => !it.first);
+    const orders = [rest, rest.slice().reverse(), rest.slice().sort((a, b) => a.y - b.y),
+      rest.slice().sort((a, b) => b.x - a.x), rest.slice().sort((a, b) => a.x - b.x)];
+    let best = null;
+    orders.forEach((o) => {
+      const res = layoutLabels(svg, head.concat(o), opts);
+      if (!best || res.score < best.score) best = res;
+    });
+    best.out.forEach(({ it, best: b, leader }) => {
+      el('text', { x: b.lx, y: b.ly, 'text-anchor': b.anchor, class: it.cls || '', style: 'font-size:11px;pointer-events:none' }, svg, it.text);
+      if (leader) {   // leader line from the point's edge to the nearest point of the label box
+        const [nx, ny] = leader;
+        const dx = nx - it.x, dy = ny - it.y, n = Math.hypot(dx, dy) || 1;
+        svg.insertBefore(el('line', { x1: it.x + (dx / n) * (it.r + 1), y1: it.y + (dy / n) * (it.r + 1), x2: nx, y2: ny,
+          stroke: '#9aa6b6', 'stroke-width': 1 }), svg.firstChild.nextSibling);
+      }
+    });
+  }
+
   function chartGap(host, R) {
     const rows = mainRows(R);
     const sighted = rows.filter((r) => r.group !== 'blind'), blind = rows.filter((r) => r.group === 'blind');
-    const top = 14, left = 42, right = 14, plotH = 220, laneH = 40, bottom = 34;
+    const top = 14, left = 42, right = 14, plotH = 280, laneH = 86, bottom = 34;
     const { svg, w, h } = svgFor(host, top + plotH + laneH + bottom);
-    const x0 = 1.9, x1 = 3.9, xs = (v) => left + ((v - x0) / (x1 - x0)) * (w - left - right);
+    const x0 = 1.9, x1 = 4.2, xs = (v) => left + ((v - x0) / (x1 - x0)) * (w - left - right);
     const y0 = 10, y1 = 50, ys = (v) => top + plotH - ((v - y0) / (y1 - y0)) * plotH;
     [10, 20, 30, 40, 50].forEach((t) => {
       el('line', { x1: left, x2: w - right, y1: ys(t), y2: ys(t), class: 'gridline' }, svg);
       el('text', { x: left - 6, y: ys(t) + 4, 'text-anchor': 'end' }, el('g', { class: 'ax' }, svg), t);
     });
-    [2.0, 2.4, 2.8, 3.2, 3.6].forEach((t) => {
+    [2.0, 2.4, 2.8, 3.2, 3.6, 4.0].forEach((t) => {
       el('line', { x1: xs(t), x2: xs(t), y1: top, y2: top + plotH + laneH, class: 'gridline' }, svg);
       el('text', { x: xs(t), y: top + plotH + laneH + 15, 'text-anchor': 'middle' }, el('g', { class: 'ax' }, svg), t.toFixed(1));
     });
@@ -211,28 +308,38 @@
     el('text', { x: 12, y: top + plotH / 2, transform: `rotate(-90 12 ${top + plotH / 2})`, 'text-anchor': 'middle', style: 'font-size:11.5px' }, svg, 'mIoU % (grounding)');
     el('line', { x1: left, x2: w - right, y1: ys(45), y2: ys(45), class: 'ref-line' }, svg);
     el('text', { x: left + 6, y: ys(45) - 5, class: 'ref-text' }, svg, '45%');
-    // blind lane: no video, so no grounding to plot
-    const laneY = top + plotH + laneH / 2 + 4;
-    el('rect', { x: left, y: top + plotH + 6, width: w - left - right, height: laneH - 10, rx: 6, fill: '#f5f7fa' }, svg);
-    el('text', { x: left + 8, y: laneY + 4, style: 'font-size:10.5px;fill:#5f6b7c' }, svg, w > 420 ? 'blind LLMs (no evidence)' : 'blind');
     el('line', { x1: left, x2: w - right, y1: top + plotH, y2: top + plotH, class: 'baseline' }, svg);
-    blind.forEach((r) => {
-      const c = el('circle', { cx: xs(r.v[ALL + 2]), cy: laneY, r: 5.5, fill: '#fff', stroke: C.blind, 'stroke-width': 2 }, svg);
-      hover(c, `<b>${r.name}</b> <span class="tip-sub">(blind)</span><br>J ${r.v[ALL + 2].toFixed(2)} &middot; no grounding`);
+
+    // blind lane: no video, so no grounding to plot
+    const laneTop = top + plotH + 6, laneBot = top + plotH + laneH - 4, ringY = laneTop + 38;
+    el('rect', { x: left, y: laneTop, width: w - left - right, height: laneBot - laneTop, rx: 6, fill: '#f5f7fa' }, svg);
+    const title = w > 420 ? 'blind LLMs (question only, no evidence)' : 'blind LLMs';
+    const tt = el('text', { x: left + 8, y: laneTop + 14, style: 'font-size:10.5px;fill:#5f6b7c' }, svg, title);
+    const titleRect = { x0: left + 7, x1: left + 9 + tt.getComputedTextLength(), y0: laneTop + 4, y1: laneTop + 17 };
+
+    const pts = sighted.map((r) => ({ r: r.group === 'ours' ? 7 : 5.5, x: xs(r.v[ALL + 2]), y: ys(r.v[ALL + 3]), row: r }));
+    const rings = blind.map((r) => ({ r: 5.5, x: xs(r.v[ALL + 2]), y: ringY, row: r }));
+    const circles = pts.concat(rings).map((p) => ({ x: p.x, y: p.y, r: p.r + 2.5 }));
+    pts.forEach((p) => {
+      const d = el('circle', { cx: p.x, cy: p.y, r: p.r, fill: groupColor(p.row.group), stroke: C.surface, 'stroke-width': 2 }, svg);
+      hover(d, `<b>${p.row.name}</b><br>J ${p.row.v[ALL + 2].toFixed(2)} &middot; mIoU ${p.row.v[ALL + 3].toFixed(1)}%`);
     });
-    // Selective direct labels; every point also has a tooltip.
-    const LABEL = { 'Ours (Qwen3-VL-4B, FT)': [0, -13, 'middle', 'Ours', 1], 'Claude-Sonnet-4.6': [9, 4, 'start', 'Claude', 1],
-      'GPT-5.4-Mini': [0, 18, 'middle', 'GPT-5.4-Mini', 1], 'Qwen3-VL-4B': [-9, 4, 'end', 'Qwen3-VL-4B', 1],
-      'InternVL3.5-4B': [9, 4, 'start', 'InternVL3.5-4B', 1], 'InternVL3.5-38B': [9, 4, 'start', 'InternVL3.5-38B', 0] };
-    sighted.forEach((r) => {
-      const cx = xs(r.v[ALL + 2]), cy = ys(r.v[ALL + 3]);
-      const L = LABEL[r.name];
-      if (L && (w > 380 || L[4])) {
-        el('text', { x: cx + L[0], y: cy + L[1], 'text-anchor': L[2], class: r.group === 'ours' ? 'lbl-strong' : '', style: 'font-size:11px;pointer-events:none' }, svg, L[3]);
-      }
-      const d = el('circle', { cx, cy, r: r.group === 'ours' ? 7 : 5.5, fill: groupColor(r.group), stroke: C.surface, 'stroke-width': 2 }, svg);
-      hover(d, `<b>${r.name}</b><br>J ${r.v[ALL + 2].toFixed(2)} &middot; mIoU ${r.v[ALL + 3].toFixed(1)}%`);
+    rings.forEach((p) => {
+      const c = el('circle', { cx: p.x, cy: p.y, r: p.r, fill: '#fff', stroke: C.blind, 'stroke-width': 2 }, svg);
+      hover(c, `<b>${p.row.name}</b> <span class="tip-sub">(blind)</span><br>J ${p.row.v[ALL + 2].toFixed(2)} &middot; no grounding`);
     });
+
+    // Every point gets a direct label. Ours first, then the most crowded points.
+    const crowd = (p) => pts.filter((q) => q !== p && Math.hypot(q.x - p.x, q.y - p.y) < 60).length;
+    const order = pts.slice().sort((a, b) => (b.row.group === 'ours') - (a.row.group === 'ours') || crowd(b) - crowd(a));
+    const refRect = { x0: left + 4, x1: left + 34, y0: ys(45) - 16, y1: ys(45) - 2 };
+    const refLine = { x0: left, x1: w - right, y0: ys(45) - 1.5, y1: ys(45) + 1.5 };   // labels never cross the 45% line
+    placeLabels(svg, order.map((p) => ({ x: p.x, y: p.y, r: p.r, text: p.row.group === 'ours' ? 'Ours' : p.row.name,
+      cls: p.row.group === 'ours' ? 'lbl-strong' : '', first: p.row.group === 'ours' })),
+    { bounds: { x0: left + 2, x1: w - right - 2, y0: top + 1, y1: top + plotH - 2 }, circles, rects: [refRect, refLine] });
+    placeLabels(svg, rings.slice().sort((a, b) => a.x - b.x).map((p) => ({ x: p.x, y: p.y, r: p.r, text: p.row.name })),
+      { bounds: { x0: left + 2, x1: w - right - 2, y0: laneTop + 2, y1: laneBot - 1 }, circles, rects: [titleRect],
+        steps: [4, 16], angles: [90, -90, 0, 180], leaders: false });   // next to its own ring: below, above, right, left
     legend(host, [['dot', C.ours, 'Ours'], ['dot', C.closed, 'Closed-source MLLM'], ['dot', C.open, 'Open-source MLLM'], ['ring', C.blind, 'Blind LLM']]);
   }
 
@@ -369,6 +476,8 @@
         renderMain(R, +b.dataset.split);
       }));
     }
+    // Label placement measures text, so lay the charts out again once the web font has arrived.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderAll);
     let lastW = window.innerWidth, timer;
     window.addEventListener('resize', () => {
       if (Math.abs(window.innerWidth - lastW) < 8) return;
