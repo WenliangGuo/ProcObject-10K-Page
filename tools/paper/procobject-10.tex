@@ -280,8 +280,9 @@
 \centering
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
+% \renewcommand{\arraystretch}{1.1}
 \caption{
-Evaluation results on testing set of \textsc{ProcObject-10K}.
+Evaluation results on the test set of \textsc{ProcObject-10K}.
 Answering is evaluated by Sentence Similarity (S.), BERT-Score F1 (B.), and LLM-as-Judge score (J.).
 Grounding is evaluated by mean IoU\%, mean IoP\%, and mean IoG\%.
 The \colorbox{bestgreen}{Best} and \colorbox{secondred}{Second-best} results are highlighted.}
@@ -388,6 +389,6 @@ Qwen3-VL-4B
 & \cellcolor{bestgreen}79.7 & \cellcolor{bestgreen}92.0 & \cellcolor{secondred}3.51 & \cellcolor{bestgreen}44.5 & \cellcolor{bestgreen}65.9 & 55.5 \\
 \bottomrule
 \end{tabular}
-% \vspace{-4pt}
+\vspace{-10pt}
 \end{table*}
 

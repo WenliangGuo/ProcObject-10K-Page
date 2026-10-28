@@ -411,7 +411,7 @@
     if (al) {
       let html = '', last;
       R.alfred.forEach((r) => {
-        if (r.group !== last) { html += `<tr class="group-row"><td colspan="5">${r.group.replace('Flare', 'FLARE +')}</td></tr>`; last = r.group; }
+        if (r.group !== last) { html += `<tr class="group-row"><td colspan="5">${r.group.replace(/^FLARE\+/i, 'FLARE + ')}</td></tr>`; last = r.group; }
         const ours = /Fine-tuned/.test(r.group);
         const nm = ours ? cleanName(r.model).replace('Qwen3-VL-4B', '<span class="method-name">Ours</span> (Qwen3-VL-4B)') : cleanName(r.model);
         const cells = r.v.map((v, k) => `<td class="${r.m[k] === 'best' ? 'best' : r.m[k] === 'second' ? 'second' : ''}">${v.toFixed(2)}</td>`).join('');

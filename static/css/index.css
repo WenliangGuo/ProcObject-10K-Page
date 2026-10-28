@@ -1238,26 +1238,6 @@ body {
 
 /* ---- method ---- */
 .method-figure { max-width: 1060px; margin: 0 auto; }
-.method-svg { display: block; width: 100%; height: auto; }
-.method-svg text { font-family: 'Noto Sans', sans-serif; text-anchor: middle; }
-.method-svg .m-lane { text-anchor: start; font-size: 13px; font-weight: 600; fill: #6b7a90; letter-spacing: 0.03em; }
-.method-svg .m-lane-bg { fill: #f7f9fc; stroke: #e7edf5; }
-.method-svg .m-box rect { fill: #fff; stroke: #c9d4e3; stroke-width: 1.2; }
-.method-svg .m-label rect { fill: #fff7e6; stroke: #f0c36b; }
-.method-svg .m-llm rect { fill: #18253a; stroke: #18253a; }
-.method-svg .m-llm text { fill: #fff; }
-.method-svg .m-head rect { fill: #eef4fc; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.method-svg .m-loss rect { fill: #fdecee; stroke: #e7a1ab; }
-.method-svg .m-t { font-size: 14px; font-weight: 600; fill: #18253a; }
-.method-svg .m-s { font-size: 11.5px; fill: #4e5d73; }
-.method-svg .m-llm .m-s { fill: #c9d4e3; }
-.method-svg .m-em { fill: #1e66d0; font-style: italic; }
-.method-svg .m-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
-.method-svg .m-edge { stroke: #7a879a; stroke-width: 1.6; fill: none; }
-.method-svg .m-dash { stroke: var(--accent); stroke-dasharray: 5 4; }
-.method-svg .m-arrowhead { fill: #7a879a; }
-.method-svg .m-note { font-size: 11px; fill: var(--accent); font-style: italic; }
-.method-svg .m-note-strong { text-anchor: start; font-size: 12px; fill: var(--accent); font-weight: 600; }
 
 .sup-block { max-width: 1120px; margin: 0 auto; }
 .sup-panel {
@@ -1371,11 +1351,6 @@ body {
 .ex-span.is-live { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px currentColor; filter: saturate(1.15) brightness(1.05); }
 .ev-inline { color: var(--ink-muted); font-size: 0.82rem; white-space: nowrap; }
 
-@media screen and (max-width: 768px) {
-  .svg-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .svg-scroll .method-svg { min-width: 760px; }
-  .svg-scroll::after { content: "scroll \2192"; display: block; text-align: right; font-size: 0.75rem; color: #8a95a5; }
-}
 
 /* ---- round-2 fixes ---- */
 html { scroll-padding-top: 3.6rem; }
@@ -1460,29 +1435,19 @@ section[id], .transfer-card, .section-subtitle[id] { scroll-margin-top: 0; }
 .teaser-toggle:hover { background: rgba(14, 22, 35, 0.9); }
 .teaser-wrap video { cursor: pointer; }
 .open-full { display: none; font-weight: 600; margin-left: 0.25rem; }
-.method-mobile { display: none; }
 @media screen and (max-width: 768px) {
   .open-full { display: inline; }
-  .method-figure .svg-scroll { display: none; }
-  .method-mobile {
-    display: flex; flex-direction: column; align-items: stretch; gap: 0.35rem;
-    list-style: none; margin: 0; padding: 0; font-size: 0.85rem;
-  }
-  .method-mobile .mm-lane { margin-top: 0.4rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; color: var(--ink-muted); text-transform: uppercase; }
-  .method-mobile .mm-box {
-    display: block; padding: 0.45rem 0.7rem; border-radius: 10px;
-    background: #fff; border: 1px solid #c9d4e3; font-weight: 600; color: #18253a; text-align: center;
-  }
-  .method-mobile .mm-box > span { display: block; font-weight: 400; font-size: 0.78rem; color: var(--text-secondary); }
-  .method-mobile .mm-label { background: #fff7e6; border-color: #f0c36b; }
-  .method-mobile .mm-head { background: #eef4fc; border: 1.5px dashed var(--accent); }
-  .method-mobile .mm-llm { background: #18253a; border-color: #18253a; color: #fff; }
-  .method-mobile .mm-llm > span { color: #c9d4e3; }
-  .method-mobile .mm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
-  .method-mobile .mm-arrow { text-align: center; color: #7a879a; line-height: 1; }
-  .method-mobile .mm-note { font-size: 0.78rem; color: var(--accent); font-weight: 600; }
 }
 .teaser-figure video.is-tall { aspect-ratio: 9 / 16; max-height: 85vh; width: auto; max-width: 100%; margin: 0 auto; }
 .teaser-wrap.is-tall { width: fit-content; max-width: 100%; margin: 0 auto; }
 /* Title keeps its two-line break on every width above phones: scale it with the viewport. */
 .hero .publication-title { font-size: clamp(1.9rem, 3.35vw, 3rem) !important; text-wrap: balance; }
+
+/* ---- camera-ready update (2026-10-28) ---- */
+.types-figure { max-width: 1180px; margin: 0 auto 1.5rem; padding: 0.75rem; }
+.types-figure .media-caption { margin-top: 0.6rem; font-size: 0.9rem; }
+.stage-no { border-radius: 7px; }
+.stage-no.s1, .stage-no.s2, .stage-no.s3, .stage-no.s4 { background: #2563d8; }
+.transfer-figure { margin: 0.6rem 0 0.4rem; }
+.transfer-figure img { border: 1px solid var(--surface-border); border-radius: 8px; }
+.transfer-figure figcaption { margin-top: 0.45rem; font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary); }

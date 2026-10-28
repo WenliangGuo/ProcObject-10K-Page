@@ -1,7 +1,7 @@
 # ProcObject-10K project page
 
-Static project page for **ProcObject-10K: Benchmarking Object-Centric Procedural Understanding in
-Instructional Videos** (NeurIPS 2026, Evaluations & Datasets Track). Served by GitHub Pages from the
+Static project page for **ProcObject-10K** — *Benchmarking and Learning Object-Centric Procedural
+Understanding in Instructional Videos* (NeurIPS 2026, Evaluations & Datasets Track). Served by GitHub Pages from the
 repository root; no build step is needed to view it.
 
 Preview locally (the page loads its data as plain `<script>` files, so opening `index.html`
@@ -20,10 +20,12 @@ static/js/                 index.js (navbar, BibTeX copy), charts.js (SVG charts
                            explorer.js (QA Explorer + QA-type cards);
                            icons are inline SVG (Font Awesome 5 Free paths)
 static/data/               generated data: results.js, stats.js, explorer.js
-static/images/             paper figures, favicon, social preview
+static/images/             paper figures rendered from the camera-ready PDFs (qa_types, data_pipeline,
+                           radar_chart, object_sft, transfer_videoqa, transfer_planning), favicon,
+                           social preview
 static/videos/explorer/    ten muted 360p test clips (+ posters) used by the Explorer
 tools/                     scripts that regenerate everything under static/data and the media
-tools/paper/               verbatim copies of the arXiv 2512.03479v2 TeX tables the numbers come from
+tools/paper/               verbatim copies of the camera-ready TeX the page text and numbers come from
 ```
 
 ## Regenerating the assets
@@ -34,11 +36,17 @@ repository root, which holds the test split, the saved benchmark predictions and
 
 ```bash
 PAGE=/path/to/ProcObject-10K-Page
-python3 $PAGE/tools/parse_tables.py $PAGE      # arXiv v2 tables  -> static/data/results.js
+python3 $PAGE/tools/parse_tables.py $PAGE      # camera-ready tables -> static/data/results.js
 python3 $PAGE/tools/make_stats.py $PAGE        # released QA      -> static/data/stats.js
 python3 $PAGE/tools/make_explorer.py $PAGE     # clips, posters, saved predictions -> static/data/explorer.js
 python3 $PAGE/tools/make_social.py $PAGE       # static/images/social.jpg
 ```
+
+The paper figures are rendered from the camera-ready figure PDFs with their crop box
+(`pdftoppm -png -cropbox -scale-to-x 2000 -scale-to-y -1 -singlefile <fig>.pdf <out>`), then saved as
+JPEG with a small white margin. The camera-ready (`ProcObject-10K_Camera_Ready/` in the research
+repository, updated 2026-10-28) is the source of record; its tables carry the same numbers as arXiv
+2512.03479v2, and the page's figure and table numbers (Fig. 1–6, Tables 2–4) follow it.
 
 `make_explorer.py` scores each prediction with the benchmark's own `evaluate_grounding.py`, so the IoU
 shown for each example matches what the benchmark would report for it. The ten examples are chosen for

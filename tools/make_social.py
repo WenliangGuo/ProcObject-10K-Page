@@ -12,8 +12,6 @@ TYPES = [('Precondition', '#3f7fcf', 2709), ('State Evolution', '#3f9a52', 2323)
 
 im = Image.new('RGB', (1200, 630), '#f6f9fc')
 d = ImageDraw.Draw(im)
-f_title = ImageFont.truetype(FONT.format('ExtraBold'), 70)
-f_sub = ImageFont.truetype(FONT.format('Semibold'), 33)
 f_pill = ImageFont.truetype(FONT.format('Semibold'), 22)
 f_lbl = ImageFont.truetype(FONT.format('Bold'), 21)
 
@@ -23,9 +21,13 @@ def centered(y, text, font, fill):
     d.text(((1200 - w) / 2, y), text, font=font, fill=fill)
 
 
-centered(46, 'ProcObject-10K', f_title, '#1e66d0')
-centered(150, 'Benchmarking Object-Centric Procedural Understanding', f_sub, '#18253a')
-centered(194, 'in Instructional Videos', f_sub, '#18253a')
+TITLE = ['Benchmarking and Learning Object-Centric', 'Procedural Understanding in Instructional Videos']
+size = 50
+while max(d.textlength(t, font=ImageFont.truetype(FONT.format('ExtraBold'), size)) for t in TITLE) > 1120:
+    size -= 1
+f_head = ImageFont.truetype(FONT.format('ExtraBold'), size)
+for k, t in enumerate(TITLE):
+    centered(104 + k * round(size * 1.3), t, f_head, '#18253a')
 pill = 'NeurIPS 2026  ·  Evaluations & Datasets Track'
 pw = d.textlength(pill, font=f_pill) + 44
 d.rounded_rectangle(((1200 - pw) / 2, 258, (1200 + pw) / 2, 298), radius=20, fill='#e6effb', outline='#c9dbf3')
